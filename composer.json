@@ -1,0 +1,27 @@
+{
+	"name": "time2split/time2help",
+	"description": "Utilities shared accross the time2split projects",
+	"license": "MIT",
+	"keywords": [
+		"help",
+		"utilities"
+	],
+	"autoload": {
+		"psr-4": {
+			"Time2Split\\Help\\": "src"
+		},
+		"files": [
+			"include/functions.php"
+		]
+	},
+	"require": {
+		"php": ">=8.2"
+	},
+	"authors": [
+		{
+			"name": "Olivier Rodriguez (zuri)",
+			"email": "zuri@time2split.net",
+			"role": "Developer"
+		}
+	]
+}
