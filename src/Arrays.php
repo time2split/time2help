@@ -1,4 +1,5 @@
 <?php
+declare(strict_types = 1);
 namespace Time2Split\Help;
 
 final class Arrays
@@ -63,6 +64,97 @@ final class Arrays
             $ret[$v][] = $k;
 
         return $ret;
+    }
+
+    // ========================================================================
+    private static function sequenceSizeIsLowerThan_mayBeStrict(bool $strict): \Closure
+    {
+        return $strict ? self::sequenceSizeIsStrictlyLowerThan(...) : self::sequenceSizeIsLowerOrEqual(...);
+    }
+
+    private static function sequenceSizeIsLowerOrEqual(iterable $a, iterable $b): bool
+    {
+        return $a->valid();
+    }
+
+    private static function sequenceSizeIsStrictlyLowerThan(iterable $a, iterable $b): bool
+    {
+        return $a->valid() && ! $b->valid();
+    }
+
+    private static function sequenceSizeEquals(iterable $a, iterable $b): bool
+    {
+        return ! $a->valid() && ! $b->valid();
+    }
+
+    private static function true(): \Closure
+    {
+        return fn () => true;
+    }
+
+    private static function equals_mayBeStrict(bool $strict): \Closure
+    {
+        return $strict ? fn ($a, $b) => $a === $b : fn ($a, $b) => $a == $b;
+    }
+
+    // ========================================================================
+    public static function sequenceHasInclusionRelation(iterable $a, iterable $b, \Closure $keyEquals, \Closure $valueEquals, \Closure $endValidation): bool
+    {
+        $a = Iterators::tryEnsureRewindableIterator($a);
+        $b = Iterators::tryEnsureRewindableIterator($b);
+        $a->rewind();
+        $b->rewind();
+
+        while ($a->valid() && $b->valid()) {
+
+            if (! $keyEquals($a->key(), $b->key()) || ! $valueEquals($a->current(), $b->current()))
+                return false;
+
+            $a->next();
+            $b->next();
+        }
+        return $endValidation($a, $b);
+    }
+
+    public static function sequenceHasEqualRelation(iterable $a, iterable $b, \Closure $keyEquals, \Closure $valueEquals): bool
+    {
+        return self::sequenceHasInclusionRelation($a, $b, $keyEquals, $valueEquals, self::sequenceSizeEquals(...));
+    }
+
+    public static function sequenceEquals(iterable $a, iterable $b, bool $strictKeyEquals = false, $strictValueEquals = false): bool
+    {
+        return self::sequenceHasEqualRelation($a, $b, self::equals_mayBeStrict($strictKeyEquals), self::equals_mayBeStrict($strictValueEquals));
+    }
+
+    public static function sequenceHasPrefixRelation(iterable $a, iterable $b, \Closure $keyEquals, \Closure $valueEquals, bool $strictPrefix = false): bool
+    {
+        return self::sequenceHasInclusionRelation($a, $b, $keyEquals, $valueEquals, self::sequenceSizeIsLowerThan_mayBeStrict($strictPrefix));
+    }
+
+    public static function sequencePrefixEquals(iterable $a, iterable $b, bool $strictKeyEquals = false, $strictValueEquals = false, bool $strictPrefix = false): bool
+    {
+        return self::sequenceHasPrefixRelation($a, $b, self::equals_mayBeStrict($strictKeyEquals), self::equals_mayBeStrict($strictValueEquals), $strictPrefix);
+    }
+
+    // ========================================================================
+    public static function listHasEqualRelation(iterable $a, iterable $b, \Closure $valueEquals): bool
+    {
+        return self::sequenceHasInclusionRelation($a, $b, self::true(), $valueEquals, self::sequenceSizeEquals(...));
+    }
+
+    public static function listEquals(iterable $a, iterable $b, bool $strictEquals = false): bool
+    {
+        return self::listHasEqualRelation($a, $b, self::equals_mayBeStrict($strictEquals));
+    }
+
+    public static function listHasPrefixRelation(iterable $prefix, iterable $list, \Closure $valueEquals, bool $strictPrefix = false): bool
+    {
+        return self::sequenceHasInclusionRelation($prefix, $list, self::true(), $valueEquals, self::sequenceSizeIsLowerThan_mayBeStrict($strictPrefix));
+    }
+
+    public static function listPrefixEquals(iterable $prefix, iterable $list, bool $strictEquals = false, bool $strictPrefix = false): bool
+    {
+        return self::listHasPrefixRelation($prefix, $list, self::equals_mayBeStrict($strictEquals), $strictPrefix);
     }
 
     // ========================================================================
@@ -164,6 +256,72 @@ final class Arrays
                 unset($b[$krel]);
             }
         }
+    }
+
+    // ========================================================================
+    /**
+     * Cartesian product between iterables.
+     *
+     * @param iterable ...$arrays
+     *            A sequence of iterable.
+     * @return \Iterator An iterator of array of key => value pairs: [ [k_1 => v_1], ... ,[$k_i => $v_i] ]
+     *         where $k_i => $v_i is an entry from the i^th iterator.
+     *         Note that a cartesian product has no result if an iterable is empty.
+     */
+    public static function cartesianProduct(iterable ...$arrays): \Iterator
+    {
+        if (empty($arrays)) {
+            return [];
+        }
+
+        foreach ($arrays as $a) {
+            $it = Iterators::tryEnsureRewindableIterator($a);
+            $keys[] = $it;
+            $it->rewind();
+
+            if (! $it->valid())
+                return [];
+
+            $result[] = [
+                $it->key() => $it->current()
+            ];
+            $it->next();
+        }
+        yield $result;
+
+        loop:
+        $i = \count($arrays);
+        while ($i --) {
+            $it = $keys[$i];
+
+            if (! $it->valid()) {
+                $it->rewind();
+                $result[$i] = [
+                    $it->key() => $it->current()
+                ];
+                $it->next();
+            } else {
+                $result[$i] = [
+                    $it->key() => $it->current()
+                ];
+                $it->next();
+                yield $result;
+                goto loop;
+            }
+        }
+    }
+
+    /**
+     * Transform each result of a cartesianProduct() iterator into a simple array of all its pair entries.
+     *
+     * @param \Iterator $cartesianProduct
+     *            The iterator of a cartesian product.
+     * @return \Iterator An Iterator of flat array which correspond to the merging of all its pairs [$k_i => $v_i].
+     */
+    public static function mergeCartesianProduct(\Iterator $cartesianProduct): \Iterator
+    {
+        foreach ($cartesianProduct as $result)
+            yield \array_merge(...$result);
     }
 
     // ========================================================================
