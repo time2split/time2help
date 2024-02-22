@@ -7,6 +7,15 @@ final class Traversables
 {
     use NotInstanciable;
 
+    public static function count(\Traversable $list): int
+    {
+        $i = 0;
+        foreach ($list as $NotUsed)
+            $i ++;
+        return $i;
+        unset($NotUsed);
+    }
+
     public static function firstValue(\Traversable $list, $default = null): mixed
     {
         foreach ($list as $v)
