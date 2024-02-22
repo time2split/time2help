@@ -65,6 +65,108 @@ final class Arrays
         return $ret;
     }
 
+    // ========================================================================
+
+    /**
+     * Check that an array is in bijection with another array with an equal relation.
+     *
+     * @param array $a
+     *            An array.
+     * @param array $b
+     *            An array.
+     * @param bool $strict
+     *            Use the strict comparison as relation (===) or the equals one (==).
+     */
+    public static function contentEquals(array $a, array $b, bool $strict = false): bool
+    {
+        if (\count($a) !== \count($b))
+            return false;
+
+        return ! self::searchValueWithoutEqualRelation($a, $b, $strict)->valid();
+    }
+
+    // ========================================================================
+    /**
+     * Search for each value of an array that is not associated with another value of a second array with an equal relation.
+     *
+     * @param array $a
+     *            An array.
+     * @param array $b
+     *            An array.
+     * @param bool $strict
+     *            Use the strict comparison as relation (===) or the equal one (==).
+     * @return \Iterator
+     */
+    public static function searchValueWithoutEqualRelation(array $a, array $b, bool $strict = false): \Iterator
+    {
+        return self::usearchValueWithoutRelation(fn ($a, $b) => \array_search($a, $b, $strict), $a, $b);
+    }
+
+    /**
+     * Search for each value of an array that is associated with another value of a second array with an equals relation.
+     *
+     * @param array $a
+     *            An array.
+     * @param array $b
+     *            An array.
+     * @param bool $strict
+     *            Use the strict comparison as relation (===) or the equals one (==).
+     * @return \Iterator
+     */
+    public static function searchEqualValueRelations(array $a, array $b, bool $strict = false): \Iterator
+    {
+        return self::usearchValueRelations(fn ($a, $b) => \array_search($a, $b, $strict), $a, $b);
+    }
+
+    /**
+     * Search for each value of an array that cannot be associated with another value of the other array.
+     *
+     * @param callable $searchRelation
+     *            The callable of the form searchRelation(mixed $value, array $array):mixed to valid a relation.
+     *            The callable must return a key or $array with which $value is in relation or return false if there is no relation.
+     * @param array $a
+     *            The array to associate from.
+     * @param array $b
+     *            The array to associate to.
+     * @return \Iterator Returns an \Iterator of $k => $v entries from $a without relation with an entry of $b.
+     */
+    public static function usearchValueWithoutRelation(callable $searchRelation, array $a, array $b): \Iterator
+    {
+        foreach ($a as $k => $v) {
+            $krel = $searchRelation($v, $b);
+
+            if (false === $krel)
+                yield $k => $v;
+            else
+                unset($b[$krel]);
+        }
+    }
+
+    /**
+     * Search for each value of an array that is associated with another value of the other array.
+     *
+     * @param callable $searchRelation
+     *            The callable of the form searchRelation(mixed $value, array $array):mixed to valid a relation.
+     *            The callable must return a key or $array with which $value is in relation or return false if there is no relation.
+     * @param array $a
+     *            The array to associate from.
+     * @param array $b
+     *            The array to associate to.
+     * @return \Iterator Returns an \Iterator of $ka => $kb entries where $ka => $va is an entry of $a in relation with $kb => $vb an entry of $b.
+     */
+    public static function usearchValueRelations(callable $searchRelation, array $a, array $b): \Iterator
+    {
+        foreach ($a as $k => $v) {
+            $krel = $searchRelation($v, $b);
+
+            if (false !== $krel) {
+                yield $k => $krel;
+                unset($b[$krel]);
+            }
+        }
+    }
+
+    // ========================================================================
     public static function subSelect(array $a, array $keys, $default = null)
     {
         $ret = [];
