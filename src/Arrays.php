@@ -15,6 +15,30 @@ final class Arrays
         ];
     }
 
+    // ========================================================================
+    public static function keyIterator(array|object $array): \Iterator
+    {
+        foreach ($array as $k => $notUsed)
+            yield $k;
+        return;
+        unset($notUsed);
+    }
+
+    public static function reverseIterator(array|object $array): \Iterator
+    {
+        for (end($array); ($k = key($array)) !== null; prev($array)) {
+            yield $k => current($array);
+        }
+    }
+
+    public static function reverseKeyIterator(array|object $array): \Iterator
+    {
+        for (end($array); ($k = key($array)) !== null; prev($array)) {
+            yield $k;
+        }
+    }
+
+    // ========================================================================
     public static function first(array $a, $default = null)
     {
         if (empty($a))
