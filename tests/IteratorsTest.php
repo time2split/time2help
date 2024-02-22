@@ -35,7 +35,7 @@ final class IteratorsTest extends TestCase
 
     // ========================================================================
     #[DataProvider('isRewritingProvider')]
-    public function testEnsureRewindableIterator(bool $isRewindable, callable $provideIterator, array $expect): void
+    public function testEnsureRewindableIterator(bool $isRewindable, \Closure $provideIterator, array $expect): void
     {
         $iterator = $provideIterator();
 

@@ -5,7 +5,7 @@ final class FIO
 {
     use Classes\NotInstanciable;
 
-    public static function streamSkipChars($stream, callable $predicate): int
+    public static function streamSkipChars($stream, \Closure $predicate): int
     {
         return self::skipChars( //
         fn () => \fgetc($stream), //
@@ -13,7 +13,7 @@ final class FIO
         $predicate);
     }
 
-    public static function streamGetChars($stream, callable $predicate): ?string
+    public static function streamGetChars($stream, \Closure $predicate): ?string
     {
         return self::getChars( //
         fn () => \fgetc($stream), //
@@ -21,7 +21,7 @@ final class FIO
         $predicate);
     }
 
-    public static function streamGetCharsUntil($stream, callable|string $endDelimiter): string
+    public static function streamGetCharsUntil($stream, \Closure|string $endDelimiter): ?string
     {
         return self::getCharsUntil( //
         fn () => \fgetc($stream), //
@@ -34,7 +34,7 @@ final class FIO
     }
 
     // ========================================================================
-    public static function skipChars(callable $fgetc, callable $fungetc, callable $predicate): int
+    public static function skipChars(\Closure $fgetc, \Closure $fungetc, \Closure $predicate): int
     {
         $nb = 0;
 
@@ -47,7 +47,7 @@ final class FIO
         return $nb;
     }
 
-    public static function getChars(callable $fgetc, callable $fungetc, callable $predicate): ?string
+    public static function getChars(\Closure $fgetc, \Closure $fungetc, \Closure $predicate): ?string
     {
         $ret = '';
 
@@ -60,15 +60,14 @@ final class FIO
         return strlen($ret) > 0 ? $ret : null;
     }
 
-    public static function skipSimpleDelimitedText(callable $fgetc, string $endDelimiter): void
+    public static function skipSimpleDelimitedText(\Closure $fgetc, string $endDelimiter): void
     {
         getSimpleDelimitedText($fgetc, $endDelimiter);
     }
 
-    public static function getCharsUntil(callable $fgetc, callable|string $endDelimiter): ?string
+    public static function getCharsUntil(\Closure $fgetc, \Closure|string $endDelimiter): ?string
     {
-        if (\is_callable($endDelimiter));
-        else {
+        if (\is_string($endDelimiter)) {
             $c = \strlen($endDelimiter);
 
             if (0 === $c)

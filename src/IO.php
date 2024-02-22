@@ -58,7 +58,7 @@ final class IO
         \chdir(\array_pop(self::$wdStack));
     }
 
-    public static function wdOp(string $workingDir, callable $exec)
+    public static function wdOp(string $workingDir, \Closure $exec)
     {
         self::wdPush($workingDir);
         $ret = $exec();
@@ -79,7 +79,7 @@ final class IO
     }
 
     // ========================================================================
-    public static function get_ob(callable $f): string
+    public static function get_ob(\Closure $f): string
     {
         \ob_start();
         $f();

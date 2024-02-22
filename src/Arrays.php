@@ -213,7 +213,7 @@ final class Arrays
     /**
      * Search for each value of an array that cannot be associated with another value of the other array.
      *
-     * @param callable $searchRelation
+     * @param \Closure $searchRelation
      *            The callable of the form searchRelation(mixed $value, array $array):mixed to valid a relation.
      *            The callable must return a key or $array with which $value is in relation or return false if there is no relation.
      * @param array $a
@@ -222,7 +222,7 @@ final class Arrays
      *            The array to associate to.
      * @return \Iterator Returns an \Iterator of $k => $v entries from $a without relation with an entry of $b.
      */
-    public static function usearchValueWithoutRelation(callable $searchRelation, array $a, array $b): \Iterator
+    public static function usearchValueWithoutRelation(\Closure $searchRelation, array $a, array $b): \Iterator
     {
         foreach ($a as $k => $v) {
             $krel = $searchRelation($v, $b);
@@ -237,7 +237,7 @@ final class Arrays
     /**
      * Search for each value of an array that is associated with another value of the other array.
      *
-     * @param callable $searchRelation
+     * @param \Closure $searchRelation
      *            The callable of the form searchRelation(mixed $value, array $array):mixed to valid a relation.
      *            The callable must return a key or $array with which $value is in relation or return false if there is no relation.
      * @param array $a
@@ -246,7 +246,7 @@ final class Arrays
      *            The array to associate to.
      * @return \Iterator Returns an \Iterator of $ka => $kb entries where $ka => $va is an entry of $a in relation with $kb => $vb an entry of $b.
      */
-    public static function usearchValueRelations(callable $searchRelation, array $a, array $b): \Iterator
+    public static function usearchValueRelations(\Closure $searchRelation, array $a, array $b): \Iterator
     {
         foreach ($a as $k => $v) {
             $krel = $searchRelation($v, $b);
@@ -433,7 +433,7 @@ final class Arrays
         }
     }
 
-    public static function update(array $args, array &$array, ?callable $onUnexists = null, ?callable $mapKey = null): void
+    public static function update(array $args, array &$array, ?\Closure $onUnexists = null, ?\Closure $mapKey = null): void
     {
         if (null === $mapKey)
             $mapKey = fn ($k) => $k;
@@ -452,7 +452,7 @@ final class Arrays
         }
     }
 
-    public static function update_getRemains(array $args, array &$array, ?callable $mapKey = null): array
+    public static function update_getRemains(array $args, array &$array, ?\Closure $mapKey = null): array
     {
         $remains = [];
         $fstore = function ($array, $k, $v) use (&$remains): void {
@@ -463,17 +463,17 @@ final class Arrays
     }
 
     // ========================================================================
-    public static function map_merge(callable $callback, array $array): array
+    public static function map_merge(\Closure $callback, array $array): array
     {
         return \array_merge(...\array_map($callback, $array));
     }
 
-    public static function map_unique(callable $callback, array $array, int $flags = SORT_REGULAR): array
+    public static function map_unique(\Closure $callback, array $array, int $flags = SORT_REGULAR): array
     {
         return \array_unique(\array_map($callback, $array), $flags);
     }
 
-    public static function map_key(?callable $callback, array $array): array
+    public static function map_key(?\Closure $callback, array $array): array
     {
         return \array_combine(\array_map($callback, \array_keys($array)), $array);
     }
@@ -535,7 +535,7 @@ final class Arrays
         return true;
     }
 
-    public static function partition(array $array, callable $filter, int $mode = 0): array
+    public static function partition(array $array, \Closure $filter, int $mode = 0): array
     {
         $a = \array_filter($array, $filter, $mode);
         $b = \array_diff_key($array, $a);
@@ -545,7 +545,7 @@ final class Arrays
         ];
     }
 
-    public static function filter_shift(array &$array, ?callable $filter = null, int $mode = 0): array
+    public static function filter_shift(array &$array, ?\Closure $filter = null, int $mode = 0): array
     {
         $drop = [];
         $ret = [];
@@ -578,7 +578,7 @@ final class Arrays
         return $ret;
     }
 
-    public static function walk_branches(array &$data, ?callable $walk, ?callable $fdown = null): void
+    public static function walk_branches(array &$data, ?\Closure $walk, ?\Closure $fdown = null): void
     {
         $toProcess = [
             [
@@ -626,11 +626,12 @@ final class Arrays
 
     public static function delete_branch_end(array &$array, array $branch, $delVal = null): void
     {
-        $a = &self::follow($array, $branch);
-        $a = $delVal;
+        $ref = &self::follow($array, $branch);
+        $ref = $delVal;
+        unset($ref);
     }
 
-    public static function walk_depth(array &$data, callable $walk): void
+    public static function walk_depth(array &$data, \Closure $walk): void
     {
         $toProcess = [
             &$data
@@ -700,7 +701,7 @@ final class Arrays
     }
 
     // ========================================================================
-    public static function linearArrayRecursive(array|\ArrayAccess $subject, array $merge, callable $linearizePath): array|\ArrayAccess
+    public static function linearArrayRecursive(array|\ArrayAccess $subject, array $merge, \Closure $linearizePath): array|\ArrayAccess
     {
         self::walk_branches($merge, function ($path, $val) use ($subject, $linearizePath) {
             $subject[$linearizePath($path)] = $val;
