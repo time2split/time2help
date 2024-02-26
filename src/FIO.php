@@ -38,7 +38,7 @@ final class FIO
     {
         $nb = 0;
 
-        while ($predicate($c = $fgetc()))
+        while (false !== ($c = $fgetc()) && $predicate($c))
             $nb ++;
 
         if ($c !== false)
