@@ -16,6 +16,26 @@ final class Traversables
         unset($NotUsed);
     }
 
+    // ========================================================================
+    public static function map(\Traversable $list, \Closure $mapKey, \Closure $mapValue): \Traversable
+    {
+        foreach ($list as $k => $v)
+            yield $mapKey($k) => $mapValue($v);
+    }
+
+    public static function mapKey(\Traversable $list, \Closure $mapKey): \Traversable
+    {
+        foreach ($list as $k => $v)
+            yield $mapKey($k) => $v;
+    }
+
+    public static function mapValue(\Traversable $list, \Closure $mapValue): \Traversable
+    {
+        foreach ($list as $k => $v)
+            yield $k => $mapValue($v);
+    }
+
+    // ========================================================================
     public static function firstValue(\Traversable $list, $default = null): mixed
     {
         foreach ($list as $v)
