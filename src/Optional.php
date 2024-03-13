@@ -16,6 +16,14 @@ final class Optional
         return $ret;
     }
 
+    public static function ofNullable($value): self
+    {
+        if ($value === null)
+            return self::empty();
+
+        return self::of($value);
+    }
+
     private static Optional $empty;
 
     public static function empty(): self
@@ -41,9 +49,17 @@ final class Optional
 
     public final function orElse($value)
     {
-        if (! $this->isPresent())
-            return $value;
+        if ($this->isPresent)
+            return $this->value;
 
-        return $this->value;
+        return $value;
+    }
+
+    public final function orElseGet(\Closure $supplier)
+    {
+        if ($this->isPresent)
+            return $this->value;
+
+        return $supplier();
     }
 }
