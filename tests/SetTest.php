@@ -32,5 +32,14 @@ final class SetTest extends TestCase
         $set['a'] = false;
         $this->assertFalse(isset($set['a']));
         $this->assertSame(0, \count($set));
+
+        $set->setMore(0, 1, 2, 3);
+        $this->assertSame(4, \count($set));
+        $set->unsetMore(1, 2);
+        $this->assertSame(2, \count($set));
+        $this->assertSame([
+            0,
+            3
+        ], \iterator_to_array($set));
     }
 }

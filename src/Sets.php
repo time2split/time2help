@@ -3,7 +3,6 @@ declare(strict_types = 1);
 namespace Time2Split\Help;
 
 use Time2Split\Help\Classes\NotInstanciable;
-use Traversable;
 
 /**
  *
@@ -22,23 +21,13 @@ final class Sets
      */
     public static function arrayKeys(): Set
     {
-        return new class() implements Set, \IteratorAggregate {
+        return new class() extends Set implements \IteratorAggregate {
 
             private array $storage = [];
 
             public function offsetGet(mixed $offset): bool
             {
                 return $this->storage[$offset] ?? false;
-            }
-
-            public function offsetExists(mixed $offset): bool
-            {
-                return isset($this->storage[$offset]);
-            }
-
-            public function offsetUnset(mixed $offset): void
-            {
-                unset($this->storage[$offset]);
             }
 
             public function count(): int
@@ -54,7 +43,7 @@ final class Sets
                 if ($value)
                     $this->storage[$offset] = true;
                 else
-                    unset($this[$offset]);
+                    unset($this->storage[$offset]);
             }
 
             public function getIterator(): \Traversable
