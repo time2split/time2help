@@ -3,7 +3,9 @@ declare(strict_types = 1);
 namespace Time2Split\Help\Tests;
 
 use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Time2Split\Help\Sets;
+use Time2Split\Help\Exception\UnmodifiableSetException;
 
 final class SetTest extends TestCase
 {
@@ -41,5 +43,37 @@ final class SetTest extends TestCase
             0,
             3
         ], \iterator_to_array($set));
+    }
+
+    // ========================================================================
+    public static function _testUnmodifiable(): iterable
+    {
+        return [
+            [
+                (function ($set) {
+                    $set[4] = true;
+                })
+            ],
+            [
+                (function ($set) {
+                    $set[4] = false;
+                })
+            ],
+            [
+                (function ($set) {
+                    unset($set[4]);
+                })
+            ]
+        ];
+    }
+
+    #[DataProvider('_testUnmodifiable')]
+    public function testUnmodifiable(\Closure $test)
+    {
+        $set = Sets::arrayKeys();
+        $set->setMore(0, 1, 2, 3);
+        $set = Sets::unmodifiable($set);
+        $this->expectException(UnmodifiableSetException::class);
+        $test($set);
     }
 }
