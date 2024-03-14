@@ -76,4 +76,24 @@ final class SetTest extends TestCase
         $this->expectException(UnmodifiableSetException::class);
         $test($set);
     }
+
+    // ========================================================================
+    public function testNull()
+    {
+        $set = Sets::null();
+
+        $this->assertSame(0, \count($set));
+        $this->assertFalse($set['a']);
+        $this->assertSame([], \iterator_to_array($set));
+
+        $this->assertSame($set, Sets::null());
+    }
+
+    #[DataProvider('_testUnmodifiable')]
+    public function testNullException(\Closure $test)
+    {
+        $set = Sets::null();
+        $this->expectException(UnmodifiableSetException::class);
+        $test($set);
+    }
 }

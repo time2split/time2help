@@ -74,4 +74,44 @@ final class Sets
             }
         };
     }
+
+    private static Set $null;
+
+    /**
+     * Get the null pattern unmodifiable set.
+     *
+     * @return Set The unique null pattern set.
+     */
+    public static function null(): Set
+    {
+        return self::$null ??= new class() extends Set implements \IteratorAggregate {
+
+            private readonly \Iterator $iterator;
+
+            public function __construct()
+            {
+                $this->iterator = new \EmptyIterator();
+            }
+
+            public function offsetGet(mixed $offset): bool
+            {
+                return false;
+            }
+
+            public function count(): int
+            {
+                return 0;
+            }
+
+            public function offsetSet(mixed $offset, mixed $value): void
+            {
+                throw new UnmodifiableSetException();
+            }
+
+            public function getIterator(): \Traversable
+            {
+                return $this->iterator;
+            }
+        };
+    }
 }
