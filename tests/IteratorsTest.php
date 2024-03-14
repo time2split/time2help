@@ -1,10 +1,12 @@
 <?php
 declare(strict_types = 1);
-use PHPUnit\Framework\Attributes\DataProvider;
+namespace Time2Split\Help\Tests;
+
 use PHPUnit\Framework\TestCase;
-use Time2Split\Config\Configurations;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Time2Split\Help\Arrays;
 use Time2Split\Help\Iterators;
+use ArrayIterator;
 
 final class IteratorsTest extends TestCase
 {
