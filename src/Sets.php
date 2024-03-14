@@ -56,6 +56,68 @@ final class Sets
     }
 
     /**
+     * Get an arrayKeys set that can store arbitrary objects
+     * as long as an object can be associated to a unique array key identifier.
+     *
+     * This class permits to handle more types of values and not just array key ones.
+     * It makes a bijection between a valid array key and an object.
+     *
+     * @param \Closure $toKey
+     *            Map an input item to a valid key.
+     * @param \Closure $fromKey
+     *            Retrieves the base object from the array key.
+     * @return Set A new Set.
+     */
+    public static function toArrayKeys(\Closure $toKey, \Closure $fromKey): Set
+    {
+        return new class(self::arrayKeys(), $toKey, $fromKey) extends SetDecorator {
+
+            public function __construct(Set $decorate, private readonly \Closure $toKey, private readonly \Closure $fromKey)
+            {
+                parent::__construct($decorate);
+            }
+
+            public function offsetSet(mixed $offset, mixed $value): void
+            {
+                $this->decorate->offsetSet(($this->toKey)($offset), $value);
+            }
+
+            public function offsetGet(mixed $offset): bool
+            {
+                return $this->decorate->offsetGet(($this->toKey)($offset));
+            }
+
+            public function getIterator(): \Traversable
+            {
+                foreach ($this->decorate as $k => $v)
+                    yield $k => ($this->fromKey)($v);
+            }
+        };
+    }
+
+    /**
+     * A set of a \BackedEnum instances.
+     *
+     * @param mixed $enumClass
+     *            The \BackedEnum class to uses for items.
+     *            It may be a string class name or a \BackedEnum instance.
+     * @return \Time2Split\Help\Set A new Set.
+     */
+    public static function ofBackedEnum($enumClass = \BackedEnum::class)
+    {
+        if (! \is_a($enumClass, \BackedEnum::class, true))
+            throw new \InvalidArgumentException("$enumClass must be a \BackedEnum");
+
+        return self::toArrayKeys(function (\BackedEnum $enum) use ($enumClass) {
+
+            if (! $enum instanceof $enumClass)
+                throw new \InvalidArgumentException(sprintf('Enum must be of type %s, have %s', $enumClass, \get_class($enum)));
+
+            return $enum->value;
+        }, $enumClass::from(...));
+    }
+
+    /**
      * Decorate a set to be unmodifiable.
      *
      * Call to a mutable method will throws a {@link UnmodifiableSetException}.

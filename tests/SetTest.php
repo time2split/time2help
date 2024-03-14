@@ -4,6 +4,7 @@ namespace Time2Split\Help\Tests;
 
 use PHPUnit\Framework\TestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
+use Time2Split\Help\Set;
 use Time2Split\Help\Sets;
 use Time2Split\Help\Exception\UnmodifiableSetException;
 
@@ -96,4 +97,66 @@ final class SetTest extends TestCase
         $this->expectException(UnmodifiableSetException::class);
         $test($set);
     }
+
+    // ========================================================================
+    public static function _testBackedEnum(): iterable
+    {
+        return [
+            [
+                Sets::ofBackedEnum(AnEnum::class)
+            ],
+            [
+                Sets::ofBackedEnum(AnEnum::a)
+            ]
+        ];
+    }
+
+    #[DataProvider('_testBackedEnum')]
+    public function testBackedEnum(Set $set)
+    {
+        $this->assertFalse($set[AnEnum::a]);
+        $set[AnEnum::a] = true;
+        $this->assertTrue($set[AnEnum::a]);
+        $this->assertSame([
+            AnEnum::a
+        ], \iterator_to_array($set));
+        $set[AnEnum::a] = false;
+        $this->assertFalse($set[AnEnum::a]);
+    }
+
+    public static function _testBackedEnumException(): iterable
+    {
+        return [
+            [
+                (function ($set) {
+                    $set[AnotherEnum::a] = true;
+                })
+            ],
+            [
+                (function ($set) {
+                    Sets::ofBackedEnum('badClass');
+                })
+            ]
+        ];
+    }
+
+    #[DataProvider('_testBackedEnumException')]
+    public function testBackedEnumException(\Closure $test)
+    {
+        $set = Sets::ofBackedEnum(AnEnum::class);
+        $this->expectException(\InvalidArgumentException::class);
+        $test($set);
+    }
+}
+
+enum AnEnum: int
+{
+
+    case a = 0;
+}
+
+enum AnotherEnum: int
+{
+
+    case a = 0;
 }
