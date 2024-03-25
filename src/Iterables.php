@@ -4,7 +4,12 @@ namespace Time2Split\Help;
 
 use Time2Split\Help\Classes\NotInstanciable;
 
-final class Traversables
+/**
+ * Functions on iterables.
+ * 
+ * @author Olivier Rodriguez (zuri)
+ */
+final class Iterables
 {
     use NotInstanciable;
 

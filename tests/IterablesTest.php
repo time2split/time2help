@@ -5,10 +5,10 @@ namespace Time2Split\Help\Tests;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Time2Split\Help\Arrays;
+use Time2Split\Help\Iterables;
 use Time2Split\Help\Tests\DataProvider\Provided;
-use Time2Split\Help\Traversables;
 
-final class TraversablesTest extends TestCase
+final class IterablesTest extends TestCase
 {
     private const testIteratorMethodsArray = [
         'a' => 1,
@@ -19,7 +19,7 @@ final class TraversablesTest extends TestCase
     private static function _makeIteratorTestMethod(string $method, string $moreHeader, $expect, ...$args): Provided
     {
         $header = "$method$moreHeader";
-        $closure = \Closure::fromCallable("Time2Split\Help\Traversables::$method");
+        $closure = \Closure::fromCallable("Time2Split\Help\Iterables::$method");
         return new Provided($header, [
             fn ($a) => $closure($a, ...$args),
             $expect
@@ -94,8 +94,8 @@ final class TraversablesTest extends TestCase
     public static function _testException(): iterable
     {
         $provide = [
-            new Provided('0>offset', [fn () => Traversables::limit([], offset: -1)]),
-            new Provided('0>length', [fn () => Traversables::limit([], length: -1)]),
+            new Provided('0>offset', [fn () => Iterables::limit([], offset: -1)]),
+            new Provided('0>length', [fn () => Iterables::limit([], length: -1)]),
         ];
         return Provided::merge($provide);
     }
