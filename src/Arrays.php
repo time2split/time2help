@@ -445,7 +445,7 @@ final class Arrays
      *
      * @param iterable ...$arrays
      *            A sequence of iterable.
-     * @return \Iterator An iterator of array of key => value pairs: [ [k_1 => v_1], ... ,[$k_i => $v_i] ]
+     * @return \Iterator<array<array>> An iterator of array of key => value pairs (array): [ [k_1 => v_1], ... ,[$k_i => $v_i] ]
      *         where $k_i => $v_i is an entry from the i^th iterator.
      *         Note that a cartesian product has no result if an iterable is empty.
      */
@@ -493,11 +493,25 @@ final class Arrays
     }
 
     /**
+     * Cartesian product between iterables merging each result in one array.
+     *
+     * @param iterable ...$arrays
+     *            A sequence of iterable.
+     * @return \Iterator<array> An iterator of array [k_1 => v_1, ... ,$k_i => $v_i]
+     *         where $k_i => $v_i is an entry from the i^th iterator.
+     *         Note that a cartesian product has no result if an iterable is empty.
+     */
+    public static function mergedCartesianProduct(iterable ...$arrays): \Iterator
+    {
+        return self::mergeCartesianProduct(self::cartesianProduct(...$arrays));
+    }
+
+    /**
      * Transform each result of a cartesianProduct() iterator into a simple array of all its pair entries.
      *
-     * @param \Iterator $cartesianProduct
+     * @param \Iterator<array<array>> $cartesianProduct
      *            The iterator of a cartesian product.
-     * @return \Iterator An Iterator of flat array which correspond to the merging of all its pairs [$k_i => $v_i].
+     * @return \Iterator<array> An Iterator of flat array which correspond to the merging of all its pairs [$k_i => $v_i].
      */
     public static function mergeCartesianProduct(\Iterator $cartesianProduct): \Iterator
     {
