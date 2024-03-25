@@ -6,64 +6,165 @@ final class Arrays
 {
     use Classes\NotInstanciable;
 
+    /**
+     * Ensure that a data is an array.
+     * 
+     * @param mixed $element A data.
+     * @return array $element if it is an array, or [ $element ].
+     */
     public static function ensureArray($element): array
     {
         if (\is_array($element))
             return $element;
 
-        return [
-            $element
-        ];
+        return [$element];
     }
 
+    /**
+     * Ensure that a data is usable as an array.
+     * 
+     * @param mixed $element A data.
+     * @return array|\ArrayAccess $element if it is usable as an array, or [ $element ].
+     */
+    public static function ensureArrayAccess($element): array|\ArrayAccess
+    {
+        if (\is_array($element) || $element instanceof \ArrayAccess)
+            return $element;
+
+        return [$element];
+    }
     // ========================================================================
-    public static function keyIterator(array|object $array): \Iterator
+    /**
+     * Iterate through the keys.
+     */
+    public static function keys(array $array): \Iterator
     {
         foreach ($array as $k => $notUsed)
             yield $k;
-        return;
-        unset($notUsed);
+    }
+    /**
+     * Iterate through the values.
+     */
+    public static function values(array $array): \Iterator
+    {
+        foreach ($array as $v)
+            yield $v;
     }
 
-    public static function reverseIterator(array|object $array): \Iterator
+    /**
+     * Iterate in reverse order.
+     */
+    public static function reverse(array $array): \Iterator
     {
-        for (end($array); ($k = key($array)) !== null; prev($array)) {
+        for (end($array); ($k = key($array)) !== null; prev($array))
             yield $k => current($array);
-        }
     }
 
-    public static function reverseKeyIterator(array|object $array): \Iterator
+    /**
+     * Iterate through the keys in reverse order.
+     */
+    public static function reverseKeys(array $array): \Iterator
     {
-        for (end($array); ($k = key($array)) !== null; prev($array)) {
+        for (end($array); ($k = key($array)) !== null; prev($array))
             yield $k;
-        }
+    }
+
+    /**
+     * Iterate through the value in reverse order.
+     */
+    public static function reverseValues(array $array): \Iterator
+    {
+        for (end($array); ($k = key($array)) !== null; prev($array))
+            yield current($array);
+    }
+
+    /**
+     * Iterate through each entry reversing its key and its value (ie: $val => $key).
+     */
+    public static function flip(array $a, $default = null): \Iterator
+    {
+        foreach ($a as $k => $v)
+            yield $v => $k;
+    }
+
+    /**
+     * Iterate through the flipped entries in reverse order.
+     * @see Arrays::flip()
+     */
+    public static function reverseFlip(array $array): \Iterator
+    {
+        for (end($array); ($k = key($array)) !== null; prev($array))
+            yield current($array) => $k;
+    }
+
+    /**
+     * Iterate through the first array entry.
+     */
+    public static function first(array $array): \Iterator
+    {
+        if (empty ($array))
+            return;
+
+        $k = \array_key_first($array);
+        yield $k => $array[$k];
+    }
+
+    /**
+     * Iterate through the last array entry.
+     */
+    public static function last(array $array): \Iterator
+    {
+        if (empty ($array))
+            return;
+
+        $k = \array_key_last($array);
+        yield $k => $array[$k];
     }
 
     // ========================================================================
-    public static function first(array $a, $default = null)
+
+    /**
+     * Get the first key. 
+     */
+    public static function firstKey(array $array, $default = null): mixed
     {
-        if (empty($a))
+        if (empty ($array))
             return $default;
 
-        return $a[\array_key_first($a)];
+        return \array_key_first($array);
     }
 
-    public static function last(array $a, $default = null)
+    /**
+     * Get the first value. 
+     */
+    public static function firstValue(array $array, $default = null): mixed
     {
-        if (empty($a))
+        if (empty ($array))
             return $default;
 
-        return $a[\array_key_last($a)];
+        return $array[\array_key_first($array)];
     }
 
-    public static function flipKeys(array $a, $default = null)
+    /**
+     * Get the last key. 
+     */
+    public static function lastKey(array $array, $default = null): mixed
     {
-        $ret = [];
+        if (empty ($array))
+            return $default;
 
-        foreach ($a as $k => $v)
-            $ret[$v][] = $k;
+        return \array_key_last($array);
+    }
 
-        return $ret;
+    /**
+     * Get the last value.
+     */
+    public static function lastValue(array $array, $default = null): mixed
+    {
+        if (empty ($array))
+            return $default;
+
+        return $array[\array_key_last($array)];
     }
 
     // ========================================================================
