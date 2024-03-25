@@ -13,6 +13,28 @@ final class Iterables
 {
     use NotInstanciable;
 
+    /**
+     * Ensure that an iterable is rewindable.
+     * 
+     * @param iterable $array An iterable.
+     * @param bool $anIteratorIsRewritable
+     *      true if the sent $array is a rewindable iterable or a \Generator.
+     * @return \Iterator Return a rewindable iterator.
+     */
+    public static function ensureRewindableIterator(iterable $array, bool $iteratorClassIsRewindable = true): \Iterator
+    {
+        if (\is_array($array))
+            return new \ArrayIterator($array);
+        if ($iteratorClassIsRewindable && $array instanceof \Iterator) {
+
+            if (!($array instanceof \Generator))
+                return $array;
+        }
+        return new \ArrayIterator(\iterator_to_array($array));
+    }
+
+    // ========================================================================
+
     public static function count(iterable $sequence): int
     {
         if (\is_array($sequence) || $sequence instanceof \Countable)

@@ -108,4 +108,45 @@ final class IterablesTest extends TestCase
         // Just to do something
         \iterator_to_array($a);
     }
+
+    // ========================================================================
+
+    public static function isRewritingProvider(): array
+    {
+        $expect = [
+            1,
+            2,
+            3
+        ];
+        return [
+            'array' => [
+                true,
+                fn () => new \ArrayIterator($expect),
+                $expect
+            ],
+            'gen' => [
+                false,
+                fn () => (function () use ($expect) {
+                    foreach ($expect as $k => $v) yield $k => $v;
+                })(),
+                $expect
+            ]
+        ];
+    }
+
+    #[DataProvider('isRewritingProvider')]
+    public function testEnsureRewindableIterator(bool $isRewindable, \Closure $provideIterator, array $expect): void
+    {
+        $iterator = $provideIterator();
+
+        $it = Iterables::ensureRewindableIterator($iterator);
+
+        $this->assertTrue(Arrays::listEquals($expect, $it));
+        $this->assertTrue(Arrays::listEquals($expect, $it));
+
+        if (!$isRewindable && $iterator instanceof \Iterator) {
+            $this->expectException(\Exception::class);
+            $iterator->rewind();
+        }
+    }
 }

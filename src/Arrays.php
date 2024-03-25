@@ -201,8 +201,8 @@ final class Arrays
     // ========================================================================
     private static function sequenceHasInclusionRelation(iterable $a, iterable $b, \Closure $keyEquals, \Closure $valueEquals, \Closure $endValidation): bool
     {
-        $a = Iterators::tryEnsureRewindableIterator($a);
-        $b = Iterators::tryEnsureRewindableIterator($b);
+        $a = Iterables::ensureRewindableIterator($a);
+        $b = Iterables::ensureRewindableIterator($b);
         $a->rewind();
         $b->rewind();
 
@@ -456,7 +456,7 @@ final class Arrays
         }
 
         foreach ($arrays as $a) {
-            $it = Iterators::tryEnsureRewindableIterator($a);
+            $it = Iterables::ensureRewindableIterator($a);
             $keys[] = $it;
             $it->rewind();
 
