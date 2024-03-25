@@ -190,19 +190,42 @@ final class Traversables
     }
 
     // ========================================================================
-    public static function map(iterable $sequence, \Closure $mapKey, \Closure $mapValue): \Traversable
+    /**
+     * Apply closures to each key and value from entries.
+     * 
+     * @param iterable $sequence A sequence of entries.
+     * @param \Closure $mapKey A closure to apply on keys.
+     * @param \Closure $mapValue A closure to apply on values.
+     * @return \Iterator An iterator on the mapped entries.
+     */
+    public static function map(iterable $sequence, \Closure $mapKey, \Closure $mapValue): \Iterator
     {
         foreach ($sequence as $k => $v)
             yield $mapKey($k) => $mapValue($v);
     }
 
-    public static function mapKey(iterable $sequence, \Closure $mapKey): \Traversable
+
+    /**
+     * Apply a closure on each key.
+     * 
+     * @param iterable $sequence A sequence of entries.
+     * @param \Closure $mapKey A closure to apply on keys.
+     * @return \Iterator An iterator on the mapped entries.
+     */
+    public static function mapKey(iterable $sequence, \Closure $mapKey): \Iterator
     {
         foreach ($sequence as $k => $v)
             yield $mapKey($k) => $v;
     }
 
-    public static function mapValue(iterable $sequence, \Closure $mapValue): \Traversable
+    /**
+     * Apply a closure on each value.
+     * 
+     * @param iterable $sequence A sequence of entries.
+     * @param \Closure $mapValue A closure to apply on values.
+     * @return \Iterator An iterator on the mapped entries.
+     */
+    public static function mapValue(iterable $sequence, \Closure $mapValue): \Iterator
     {
         foreach ($sequence as $k => $v)
             yield $k => $mapValue($v);
@@ -210,11 +233,21 @@ final class Traversables
 
     // ========================================================================
 
-    public static function limit(iterable $sequence, int $offset = 0, ?int $length = null): \Generator
+    /**
+     * Iterate through a slice of an iterable.
+     * 
+     * @param iterable $sequence A sequence of entries.
+     * @param int $offset A positive offset from wich to begin.
+     * @param mixed $length A positive length of the number of entries to read.
+     * @return \Iterator An iterator of the selected slice.
+     * @throws \DomainException If the offset or the length is negative.
+     */
+    public static function limit(iterable $sequence, int $offset = 0, int $length = null): \Iterator
     {
-        assert($offset >= 0);
-        assert($length >= 0);
-
+        if ($offset < 0)
+            throw new \DomainException("The offset must be positive, has $offset");
+        if ($length < 0)
+            throw new \DomainException("The offset must be positive, has $length");
         if ($length === 0)
             return;
 

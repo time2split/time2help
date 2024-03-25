@@ -4,7 +4,9 @@ namespace Time2Split\Help\Tests;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Time2Split\Help\Arrays;
 use Time2Split\Help\Tests\DataProvider\Provided;
+use Time2Split\Help\Traversables;
 
 final class TraversablesTest extends TestCase
 {
@@ -14,17 +16,30 @@ final class TraversablesTest extends TestCase
         'c' => 3
     ];
 
-    private static function makeIteratorTestMethod(string $method, $expect): Provided
+    private static function _makeIteratorTestMethod(string $method, string $moreHeader, $expect, ...$args): Provided
     {
+        $header = "$method$moreHeader";
         $closure = \Closure::fromCallable("Time2Split\Help\Traversables::$method");
-        return new Provided($method, [
-            fn ($a) => $closure($a),
+        return new Provided($header, [
+            fn ($a) => $closure($a, ...$args),
             $expect
         ]);
     }
 
+    private static function makeIteratorTestMethod(string $method, $expect, ...$args): Provided
+    {
+        return self::_makeIteratorTestMethod($method, "", $expect, ...$args);
+    }
+
     public static function _testIteratorMethods(): iterable
     {
+        $mapk = \strtoupper(...);
+        $mapv = fn (int $v) => $v * 10;
+        $mapped = [
+            'A' => 10,
+            'B' => 20,
+            'C' => 30,
+        ];
         $provided = [
             new Provided("array", [fn ($a) => $a]),
             new Provided("ArrayIterator", [fn ($a) => new \ArrayIterator($a)]),
@@ -47,7 +62,18 @@ final class TraversablesTest extends TestCase
             self::makeIteratorTestMethod('firstValue', 1),
             self::makeIteratorTestMethod('lastKey', 'c'),
             self::makeIteratorTestMethod('lastValue', 3),
+
+            self::makeIteratorTestMethod('map', $mapped, $mapk, $mapv),
+            self::makeIteratorTestMethod('mapKey', \array_combine(\array_keys($mapped), self::testIteratorMethodsArray), $mapk),
+            self::makeIteratorTestMethod('mapValue', \array_combine(\array_keys(self::testIteratorMethodsArray), $mapped), $mapv),
         ];
+
+        $limits = Arrays::mergeCartesianProduct(Arrays::cartesianProduct([0, 1, 2], [0, 1, 2, 3]));
+
+        foreach ($limits as list($offset, $length)) {
+            $expect = \array_slice(self::testIteratorMethodsArray, $offset, $length, true);
+            $methods[] = self::_makeIteratorTestMethod('limit', ":$offset,$length", $expect, $offset, $length);
+        }
         return Provided::merge($provided, $methods);
     }
 
@@ -61,5 +87,25 @@ final class TraversablesTest extends TestCase
             $res = \iterator_to_array($res);
 
         $this->assertSame($expect, $res);
+    }
+
+    // ========================================================================
+
+    public static function _testException(): iterable
+    {
+        $provide = [
+            new Provided('0>offset', [fn () => Traversables::limit([], offset: -1)]),
+            new Provided('0>length', [fn () => Traversables::limit([], length: -1)]),
+        ];
+        return Provided::merge($provide);
+    }
+
+    #[DataProvider("_testException")]
+    public function testException(\Closure $test): void
+    {
+        $this->expectException(\DomainException::class);
+        $a = $test();
+        // Just to do something
+        \iterator_to_array($a);
     }
 }
