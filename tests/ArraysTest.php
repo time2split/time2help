@@ -1,5 +1,5 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 namespace Time2Split\Help\Tests;
 
 use PHPUnit\Framework\TestCase;
@@ -185,7 +185,7 @@ final class ArraysTest extends TestCase
         $diff = \iterator_to_array(Arrays::searchValueWithoutEqualRelation($b, $a, $strict));
         $this->assertSame($resultba, $diff);
 
-        $equals = empty($resultab) && empty($resultba);
+        $equals = empty ($resultab) && empty ($resultba);
         $this->assertSame($equals, Arrays::contentEquals($a, $b, $strict));
     }
 
@@ -212,13 +212,14 @@ final class ArraysTest extends TestCase
                     ]
                 ];
         } else {
-            foreach (\array_shift($generators)() as $k => $v)
+            foreach (\array_shift($generators)() as $k => $v) {
                 foreach (self::cartesianResult(...$generators) as $subProduct)
                     yield \array_merge([
                         [
                             $k => $v
                         ]
                     ], $subProduct);
+            }
         }
     }
 
@@ -289,19 +290,19 @@ final class ArraysTest extends TestCase
             $test = match ($testType) {
                 ArraysTestSequenceType::Equals => Arrays::sequenceEquals(...),
                 ArraysTestSequenceType::Prefix => Arrays::sequencePrefixEquals(...),
-                ArraysTestSequenceType::StrictPrefix => fn($a, $b) => Arrays::sequencePrefixEquals($a, $b, strictPrefix: true),
+                ArraysTestSequenceType::StrictPrefix => fn ($a, $b) => Arrays::sequencePrefixEquals($a, $b, strictPrefix: true),
                 ArraysTestSequenceType::ListEquals => Arrays::listEquals(...),
                 ArraysTestSequenceType::ListPrefix => Arrays::listPrefixEquals(...),
-                ArraysTestSequenceType::ListStrictPrefix => fn($a, $b) => Arrays::ListPrefixEquals($a, $b, strictPrefix: true),
+                ArraysTestSequenceType::ListStrictPrefix => fn ($a, $b) => Arrays::ListPrefixEquals($a, $b, strictPrefix: true),
             };
         else
             $test = match ($testType) {
-                ArraysTestSequenceType::Equals => fn($a, $b) => Arrays::sequenceEquals($a, $b, true, true),
-                ArraysTestSequenceType::Prefix => fn($a, $b) => Arrays::sequencePrefixEquals($a, $b, true, true),
-                ArraysTestSequenceType::StrictPrefix => fn($a, $b) => Arrays::sequencePrefixEquals($a, $b, true, true, true),
-                ArraysTestSequenceType::ListEquals => fn($a, $b) => Arrays::ListEquals($a, $b, true),
-                ArraysTestSequenceType::ListPrefix => fn($a, $b) => Arrays::ListPrefixEquals($a, $b, true),
-                ArraysTestSequenceType::ListStrictPrefix => fn($a, $b) => Arrays::ListPrefixEquals($a, $b, true, true),
+                ArraysTestSequenceType::Equals => fn ($a, $b) => Arrays::sequenceEquals($a, $b, true, true),
+                ArraysTestSequenceType::Prefix => fn ($a, $b) => Arrays::sequencePrefixEquals($a, $b, true, true),
+                ArraysTestSequenceType::StrictPrefix => fn ($a, $b) => Arrays::sequencePrefixEquals($a, $b, true, true, true),
+                ArraysTestSequenceType::ListEquals => fn ($a, $b) => Arrays::ListEquals($a, $b, true),
+                ArraysTestSequenceType::ListPrefix => fn ($a, $b) => Arrays::ListPrefixEquals($a, $b, true),
+                ArraysTestSequenceType::ListStrictPrefix => fn ($a, $b) => Arrays::ListPrefixEquals($a, $b, true, true),
             };
 
         return new Provided($header, [

@@ -1,5 +1,5 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 namespace Time2Split\Help;
 
 use Time2Split\Help\Classes\NotInstanciable;
@@ -7,7 +7,8 @@ use Time2Split\Help\Exception\UnmodifiableSetException;
 use Time2Split\Help\_private\Set\SetDecorator;
 
 /**
- *
+ * Factories and functions on sets.
+ * 
  * @author Olivier Rodriguez (zuri)
  */
 final class Sets
@@ -23,7 +24,7 @@ final class Sets
      */
     public static function arrayKeys(): Set
     {
-        return new class() extends Set implements \IteratorAggregate {
+        return new class () extends Set implements \IteratorAggregate {
 
             private array $storage = [];
 
@@ -39,7 +40,7 @@ final class Sets
 
             public function offsetSet(mixed $offset, mixed $value): void
             {
-                if (! \is_bool($value))
+                if (!\is_bool($value))
                     throw new \InvalidArgumentException('Must be a boolean');
 
                 if ($value)
@@ -70,7 +71,7 @@ final class Sets
      */
     public static function toArrayKeys(\Closure $toKey, \Closure $fromKey): Set
     {
-        return new class(self::arrayKeys(), $toKey, $fromKey) extends SetDecorator {
+        return new class (self::arrayKeys(), $toKey, $fromKey) extends SetDecorator {
 
             public function __construct(Set $decorate, private readonly \Closure $toKey, private readonly \Closure $fromKey)
             {
@@ -105,12 +106,12 @@ final class Sets
      */
     public static function ofBackedEnum($enumClass = \BackedEnum::class)
     {
-        if (! \is_a($enumClass, \BackedEnum::class, true))
+        if (!\is_a($enumClass, \BackedEnum::class, true))
             throw new \InvalidArgumentException("$enumClass must be a \BackedEnum");
 
         return self::toArrayKeys(function (\BackedEnum $enum) use ($enumClass) {
 
-            if (! $enum instanceof $enumClass)
+            if (!$enum instanceof $enumClass)
                 throw new \InvalidArgumentException(sprintf('Enum must be of type %s, have %s', $enumClass, \get_class($enum)));
 
             return $enum->value;
@@ -128,7 +129,7 @@ final class Sets
      */
     public static function unmodifiable(Set $set): Set
     {
-        return new class($set) extends SetDecorator {
+        return new class ($set) extends SetDecorator {
 
             public function offsetSet(mixed $offset, mixed $value): void
             {
@@ -146,7 +147,7 @@ final class Sets
      */
     public static function null(): Set
     {
-        return self::$null ??= new class() extends Set implements \IteratorAggregate {
+        return self::$null ??= new class () extends Set implements \IteratorAggregate {
 
             private readonly \Iterator $iterator;
 

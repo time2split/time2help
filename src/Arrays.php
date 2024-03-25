@@ -1,7 +1,12 @@
 <?php
-declare(strict_types = 1);
+declare(strict_types=1);
 namespace Time2Split\Help;
 
+/**
+ * Functions on arrays.
+ * 
+ * @author Olivier Rodriguez (zuri)
+ */
 final class Arrays
 {
     use Classes\NotInstanciable;
@@ -185,7 +190,7 @@ final class Arrays
 
     private static function sequenceSizeEquals(\Iterator $a, \Iterator $b): bool
     {
-        return ! $a->valid() && ! $b->valid();
+        return !$a->valid() && !$b->valid();
     }
 
     private static function true(): \Closure
@@ -208,7 +213,7 @@ final class Arrays
 
         while ($a->valid() && $b->valid()) {
 
-            if (! $keyEquals($a->key(), $b->key()) || ! $valueEquals($a->current(), $b->current()))
+            if (!$keyEquals($a->key(), $b->key()) || !$valueEquals($a->current(), $b->current()))
                 return false;
 
             $a->next();
@@ -355,7 +360,7 @@ final class Arrays
         if (\count($a) !== \count($b))
             return false;
 
-        return ! self::searchValueWithoutEqualRelation($a, $b, $strict)->valid();
+        return !self::searchValueWithoutEqualRelation($a, $b, $strict)->valid();
     }
 
     // ========================================================================
@@ -451,7 +456,7 @@ final class Arrays
      */
     public static function cartesianProduct(iterable ...$arrays): \Iterator
     {
-        if (empty($arrays)) {
+        if (empty ($arrays)) {
             return [];
         }
 
@@ -460,7 +465,7 @@ final class Arrays
             $keys[] = $it;
             $it->rewind();
 
-            if (! $it->valid())
+            if (!$it->valid())
                 return [];
 
             $result[] = [
@@ -472,10 +477,10 @@ final class Arrays
 
         loop:
         $i = \count($arrays);
-        while ($i --) {
+        while ($i--) {
             $it = $keys[$i];
 
-            if (! $it->valid()) {
+            if (!$it->valid()) {
                 $it->rewind();
                 $result[$i] = [
                     $it->key() => $it->current()
@@ -532,22 +537,22 @@ final class Arrays
 
     public static function &follow(array &$array, array $path, $default = null)
     {
-        if (empty($path))
+        if (empty ($path))
             return $array;
 
         $p = &$array;
 
-        for (;;) {
+        for (; ; ) {
             $k = \array_shift($path);
 
-            if (! \array_key_exists($k, $p))
+            if (!\array_key_exists($k, $p))
                 return $default;
 
             $p = &$p[$k];
 
-            if (empty($path))
+            if (empty ($path))
                 return $p;
-            if (! is_array($p) && ! empty($path))
+            if (!is_array($p) && !empty ($path))
                 return $default;
         }
     }
@@ -589,13 +594,14 @@ final class Arrays
         return $ret;
     }
 
-    public static function updateRecursive($args, array &$array, //
-    ?callable $onUnexists = null, //
-    ?callable $mapKey = null, //
-    ?callable $set = null): //
-    void
-    {
-        if (! \is_array($args))
+    public static function updateRecursive(
+        $args,
+        array &$array,
+        ?callable $onUnexists = null,
+        ?callable $mapKey = null,
+        ?callable $set = null,
+    ): void {
+        if (!\is_array($args))
             $array = $args;
 
         if (null === $mapKey)
@@ -612,14 +618,14 @@ final class Arrays
         foreach ($args as $k => $v) {
             $k = $mapKey($k);
 
-            if (! \array_key_exists($k, $array))
+            if (!\array_key_exists($k, $array))
                 $onUnexists($array, $k, $v);
 
             $pp = &$array[$k];
 
             if (\is_array($v)) {
 
-                if (! \is_array($pp))
+                if (!\is_array($pp))
                     $pp = [];
 
                 self::updateRecursive($v, $pp, $onUnexists, $mapKey, $set);
@@ -636,7 +642,7 @@ final class Arrays
         foreach ($args as $k => $v) {
             $k = $mapKey($k);
 
-            if (! \array_key_exists($k, $array)) {
+            if (!\array_key_exists($k, $array)) {
 
                 if ($onUnexists === null)
                     throw new \Exception("The key '$k' does not exists in the array: " . implode(',', \array_keys($array)));
@@ -675,7 +681,7 @@ final class Arrays
 
     public static function kdelete_get(array &$array, $key, $default = null)
     {
-        if (! \array_key_exists($key, $array))
+        if (!\array_key_exists($key, $array))
             return $default;
 
         $ret = $array[$key];
@@ -778,7 +784,8 @@ final class Arrays
         $toProcess = [
             [
                 [],
-                &$data
+                &
+                $data
             ]
         ];
         if (null === $walk)
@@ -786,7 +793,7 @@ final class Arrays
         if (null === $fdown)
             $fdown = fn () => true;
 
-        while (! empty($toProcess)) {
+        while (!empty ($toProcess)) {
             $nextToProcess = [];
 
             foreach ($toProcess as $tp) {
@@ -796,12 +803,13 @@ final class Arrays
                 foreach ($array as $k => &$val) {
                     $path[] = $k;
 
-                    if (\is_array($val) && ! empty($val)) {
+                    if (\is_array($val) && !empty ($val)) {
 
                         if ($fdown($path, $val))
                             $nextToProcess[] = [
                                 $path,
-                                &$val
+                                &
+                                $val
                             ];
                     } else
                         $walk($path, $val);
@@ -829,10 +837,11 @@ final class Arrays
     public static function walk_depth(array &$data, \Closure $walk): void
     {
         $toProcess = [
-            &$data
+            &
+            $data
         ];
 
-        while (! empty($toProcess)) {
+        while (!empty ($toProcess)) {
             $nextToProcess = [];
 
             foreach ($toProcess as &$item) {
@@ -848,13 +857,13 @@ final class Arrays
 
     public static function is_almost_list(array $array): bool
     {
-        $notInt = \array_filter(\array_keys($array), fn ($k) => ! \is_int($k));
-        return empty($notInt);
+        $notInt = \array_filter(\array_keys($array), fn ($k) => !\is_int($k));
+        return empty ($notInt);
     }
 
     public static function reindex_list(array &$array): void
     {
-        if (! self::is_almost_list($array))
+        if (!self::is_almost_list($array))
             return;
 
         $array = \array_values($array);
@@ -881,7 +890,7 @@ final class Arrays
     {
         $ret = 0;
         self::walk_branches($data, function () use (&$ret) {
-            $ret ++;
+            $ret++;
         });
         return $ret;
     }

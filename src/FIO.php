@@ -1,36 +1,44 @@
 <?php
 namespace Time2Split\Help;
 
+/**
+ * Functions for File Inputs/Outputs.
+ * 
+ * @author Olivier Rodriguez (zuri)
+ */
 final class FIO
 {
     use Classes\NotInstanciable;
 
     public static function streamSkipChars($stream, \Closure $predicate): int
     {
-        return self::skipChars( //
-        fn () => \fgetc($stream), //
-        fn () => \fseek($stream, - 1, SEEK_CUR), //
-        $predicate);
+        return self::skipChars(
+            fn () => \fgetc($stream),
+            fn () => \fseek($stream, -1, SEEK_CUR),
+            $predicate,
+        );
     }
 
     public static function streamGetChars($stream, \Closure $predicate): ?string
     {
-        return self::getChars( //
-        fn () => \fgetc($stream), //
-        fn () => \fseek($stream, - 1, SEEK_CUR), //
-        $predicate);
+        return self::getChars(
+            fn () => \fgetc($stream),
+            fn () => \fseek($stream, -1, SEEK_CUR),
+            $predicate,
+        );
     }
 
     public static function streamGetCharsUntil($stream, \Closure|string $endDelimiter): ?string
     {
-        return self::getCharsUntil( //
-        fn () => \fgetc($stream), //
-        $endDelimiter);
+        return self::getCharsUntil(
+            fn () => \fgetc($stream),
+            $endDelimiter,
+        );
     }
 
     public static function streamUngetc($stream): bool
     {
-        return \fseek($stream, - 1, SEEK_CUR);
+        return \fseek($stream, -1, SEEK_CUR);
     }
 
     // ========================================================================
@@ -39,7 +47,7 @@ final class FIO
         $nb = 0;
 
         while (false !== ($c = $fgetc()) && $predicate($c))
-            $nb ++;
+            $nb++;
 
         if ($c !== false)
             $fungetc();
@@ -88,7 +96,7 @@ final class FIO
 
             if ($c === '\\')
                 $skip = true;
-            elseif ($endDelimiter($c) && ! $skip)
+            elseif ($endDelimiter($c) && !$skip)
                 return $ret;
             else
                 $ret .= $c;

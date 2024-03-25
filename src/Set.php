@@ -56,8 +56,7 @@ abstract class Set implements BaseSet
      */
     public final function setFromList(iterable ...$lists): static
     {
-        foreach ($lists as $items)
-            foreach ($items as $item)
+        foreach ($lists as $items) foreach ($items as $item)
                 $this->offsetSet($item, true);
         return $this;
     }
@@ -71,9 +70,10 @@ abstract class Set implements BaseSet
      */
     public final function unsetFromList(iterable ...$lists): static
     {
-        foreach ($lists as $items)
+        foreach ($lists as $items) {
             foreach ($items as $item)
                 $this->offsetUnset($item);
+        }
         return $this;
     }
 }

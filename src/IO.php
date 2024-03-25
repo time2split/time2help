@@ -1,6 +1,11 @@
 <?php
 namespace Time2Split\Help;
 
+/**
+ * Functions for inputs/outputs.
+ *
+ * @author Olivier Rodriguez (zuri)
+ */
 final class IO
 {
     use Classes\NotInstanciable;
@@ -12,9 +17,10 @@ final class IO
 
     public static function rrmdir(string $dir, bool $rmRoot = true): void
     {
-        $paths = new \RecursiveIteratorIterator( //
-        new \RecursiveDirectoryIterator($dir, \RecursiveDirectoryIterator::SKIP_DOTS), //
-        \RecursiveIteratorIterator::CHILD_FIRST);
+        $paths = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($dir, \RecursiveDirectoryIterator::SKIP_DOTS),
+            \RecursiveIteratorIterator::CHILD_FIRST,
+        );
 
         foreach ($paths as $pathInfo) {
             $p = $pathInfo->getPathName();
@@ -46,13 +52,13 @@ final class IO
     {
         \array_push(self::$wdStack, \getcwd());
 
-        if (! \chdir($path))
+        if (!\chdir($path))
             throw new \Exception("Cannot chdir to $path");
     }
 
     public static function wdPop(): void
     {
-        if (empty(self::$wdStack))
+        if (empty (self::$wdStack))
             throw new \Exception("WD stack is empty");
 
         \chdir(\array_pop(self::$wdStack));
@@ -120,7 +126,7 @@ final class IO
 
             if ($rewind) {
 
-                if (! self::isSeekableStream($stream, $meta_data))
+                if (!self::isSeekableStream($stream, $meta_data))
                     throw new \Exception("Is not a seekable stream: " . $meta_data['stream_type']);
 
                 \rewind($stream);
@@ -159,9 +165,9 @@ final class IO
         while (($status = \proc_get_status($proc))['running'])
             \usleep(10);
 
-        if (isset($pipes[1]))
+        if (isset ($pipes[1]))
             $output = \stream_get_contents($pipes[1]);
-        if (isset($pipes[2]))
+        if (isset ($pipes[2]))
             $err = \stream_get_contents($pipes[2]);
 
         return $status['exitcode'];
@@ -171,7 +177,7 @@ final class IO
     {
         if (is_file($filename)) {
 
-            if (empty($uniqueVar))
+            if (empty ($uniqueVar))
                 \extract($variables);
             else
                 $$uniqueVar = $variables;
