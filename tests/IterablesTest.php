@@ -141,12 +141,189 @@ final class IterablesTest extends TestCase
 
         $it = Iterables::ensureRewindableIterator($iterator);
 
-        $this->assertTrue(Arrays::listEquals($expect, $it));
-        $this->assertTrue(Arrays::listEquals($expect, $it));
+        $this->assertTrue(Iterables::listEquals($expect, $it));
+        $this->assertTrue(Iterables::listEquals($expect, $it));
 
         if (!$isRewindable && $iterator instanceof \Iterator) {
             $this->expectException(\Exception::class);
             $iterator->rewind();
         }
+    }
+    private static function makeSequenceTest(TestSequenceData $a, TestSequenceData $b, TestSequenceType $testType, bool $strictCmp, bool $expect = true): Provided
+    {
+        $e = $expect ? 'true' : 'false';
+        $s = $strictCmp ? 'strict ' : '';
+        $header = "$a $s$testType->name $b is $e";
+
+        if (!$strictCmp)
+            $test = match ($testType) {
+                TestSequenceType::Equals => Iterables::sequenceEquals(...),
+                TestSequenceType::Prefix => Iterables::sequencePrefixEquals(...),
+                TestSequenceType::StrictPrefix => fn ($a, $b) => Iterables::sequencePrefixEquals($a, $b, strictPrefix: true),
+                TestSequenceType::ListEquals => Iterables::listEquals(...),
+                TestSequenceType::ListPrefix => Iterables::listPrefixEquals(...),
+                TestSequenceType::ListStrictPrefix => fn ($a, $b) => Iterables::ListPrefixEquals($a, $b, strictPrefix: true),
+            };
+        else
+            $test = match ($testType) {
+                TestSequenceType::Equals => fn ($a, $b) => Iterables::sequenceEquals($a, $b, true, true),
+                TestSequenceType::Prefix => fn ($a, $b) => Iterables::sequencePrefixEquals($a, $b, true, true),
+                TestSequenceType::StrictPrefix => fn ($a, $b) => Iterables::sequencePrefixEquals($a, $b, true, true, true),
+                TestSequenceType::ListEquals => fn ($a, $b) => Iterables::ListEquals($a, $b, true),
+                TestSequenceType::ListPrefix => fn ($a, $b) => Iterables::ListPrefixEquals($a, $b, true),
+                TestSequenceType::ListStrictPrefix => fn ($a, $b) => Iterables::ListPrefixEquals($a, $b, true, true),
+            };
+
+        return new Provided($header, [
+            $expect,
+            $test,
+            $a->sequence,
+            $b->sequence,
+        ]);
+    }
+
+    // ========================================================================
+
+    private static function makeListPrefixTest(TestSequenceData $a, TestSequenceData $b, bool $strictCmp, bool $strictPrefix = false, bool $expect = true): array
+    {
+        if ($strictPrefix)
+            return [
+                self::makeSequenceTest($a, $b, TestSequenceType::ListStrictPrefix, $strictCmp, $expect),
+            ];
+        else
+            return [
+                self::makeSequenceTest($a, $b, TestSequenceType::ListPrefix, $strictCmp, $expect),
+            ];
+    }
+    private static function _makePrefixTest(TestSequenceData $a, TestSequenceData $b, bool $strictCmp, bool $strictPrefix = false, bool $expect = true): array
+    {
+        if ($strictPrefix)
+            $ret = [
+                self::makeSequenceTest($a, $b, TestSequenceType::StrictPrefix, $strictCmp, $expect),
+            ];
+        else
+            $ret = [
+                self::makeSequenceTest($a, $b, TestSequenceType::Prefix, $strictCmp, $expect),
+            ];
+
+        return [
+            ...$ret,
+            ...self::makeListPrefixTest($a, $b, $strictCmp, $strictPrefix, $expect),
+        ];
+    }
+
+    private static function makePrefixTest(TestSequenceData $a, TestSequenceData $b, bool $strictCmp, bool $strictPrefix = false, bool $expect = true): array
+    {
+        $ret = self::_makePrefixTest($a, $b, $strictCmp, $strictPrefix, $expect);
+
+        if ($expect) {
+
+            if ($strictPrefix)
+                $ret = \array_merge($ret, self::_makePrefixTest($a, $b, $strictCmp, false, true));
+
+        } elseif (!$strictPrefix)
+            $ret = \array_merge($ret, self::_makePrefixTest($a, $b, $strictCmp, true, false));
+
+        return $ret;
+    }
+
+    // ========================================================================
+
+    private static function _makeEqualTest(TestSequenceData $a, TestSequenceData $b, bool $strictCmp, bool $expect = true): array
+    {
+        $ret = [
+            self::makeSequenceTest($a, $b, TestSequenceType::Equals, $strictCmp, $expect),
+            self::makeSequenceTest($a, $b, TestSequenceType::ListEquals, $strictCmp, $expect),
+        ];
+        if ($expect) {
+            $ret = \array_merge($ret, self::makePrefixTest($a, $b, $strictCmp, false, $expect));
+
+            if ($strictCmp)
+                $ret = \array_merge($ret, self::_makeEqualTest($a, $b, false, true));
+        } else {
+
+            if (!$strictCmp)
+                $ret = \array_merge($ret, self::_makeEqualTest($a, $b, true, true));
+        }
+        return $ret;
+    }
+
+    private static function makeEqualTest(TestSequenceData $a, TestSequenceData $b, bool $strictCmp, bool $expect = true): array
+    {
+        if ($a === $b)
+            return self::_makeEqualTest($a, $b, $strictCmp, $expect);
+        else
+            return [
+                ...self::_makeEqualTest($a, $b, $strictCmp, $expect),
+                ...self::_makeEqualTest($b, $a, $strictCmp, $expect),
+            ];
+    }
+
+    // ========================================================================
+
+    public static function _testSequence(): iterable
+    {
+        $a = new TestSequenceData('a', ['a' => 1]);
+        $a2 = new TestSequenceData('a2', ['a' => true]);
+        $alist = new TestSequenceData('al', [1]);
+        $b = new TestSequenceData('ab', [...$a->sequence, 'b' => 2]);
+        $b2 = new TestSequenceData('ab2', [...$a2->sequence, 'b' => 2]);
+        $positive = [
+            ...self::makeEqualTest($a, $a, true),
+            ...self::makeEqualTest($b, $b, true),
+            ...self::makeEqualTest($a, $a2, false),
+            ...self::makeEqualTest($b, $b2, false),
+
+            ...self::makePrefixTest($a, $b, true),
+            ...self::makePrefixTest($a, $b2, false),
+            ...self::makePrefixTest($a2, $b, false),
+            ...self::makePrefixTest($a2, $b2, true),
+
+            self::makeSequenceTest($alist, $a, TestSequenceType::ListEquals, true),
+            ...self::makeListPrefixTest($alist, $a, true),
+            ...self::makeListPrefixTest($alist, $a2, false),
+        ];
+        $negative = [
+            ...self::makeEqualTest($a, $b, true, false),
+            ...self::makeEqualTest($a, $a2, true, false),
+            ...self::makeEqualTest($b, $b2, true, false),
+
+            ...self::makePrefixTest($b, $a, true, false, false),
+            ...self::makePrefixTest($b2, $a, false, false, false),
+            ...self::makePrefixTest($b, $a2, false, false, false),
+            ...self::makePrefixTest($b2, $a2, true, false, false),
+        ];
+        return Provided::merge([...$positive, ...$negative]);
+    }
+
+    #[DataProvider('_testSequence')]
+    public function testSequence(bool $expected, callable $test, iterable $a, iterable $b): void
+    {
+        $this->assertEquals($expected, $test($a, $b));
+    }
+}
+
+// ============================================================================
+
+enum TestSequenceType
+{
+    case Equals;
+    case Prefix;
+    case StrictPrefix;
+    case ListEquals;
+    case ListPrefix;
+    case ListStrictPrefix;
+}
+
+class TestSequenceData
+{
+
+    public function __construct(public string $name, public iterable $sequence)
+    {
+    }
+
+    public function __toString(): string
+    {
+        return $this->name;
     }
 }
