@@ -2,6 +2,7 @@
 declare(strict_types=1);
 namespace Time2Split\Help\Tests;
 
+use PHPUnit\Framework\Assert;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Time2Split\Help\Arrays;
@@ -87,6 +88,63 @@ final class IterablesTest extends TestCase
             $res = \iterator_to_array($res);
 
         $this->assertSame($expect, $res);
+    }
+
+    // ========================================================================
+
+    public static function _testCountTraversable(array $array)
+    {
+        return new class ($array) extends \ArrayObject {
+
+            private bool $count = false;
+
+            public function count(): int
+            {
+                $this->count = true;
+                return 3;
+            }
+
+            public function calledCount(): bool
+            {
+                return $this->count;
+            }
+        };
+    }
+    public static function _testCount(): iterable
+    {
+        $array = self::testIteratorMethodsArray;
+        $expect = \count($array);
+        $provide = [
+            new Provided('array', [
+                fn () => Iterables::count($array),
+                $expect
+            ]),
+            new Provided('Traversable', [
+                function () use ($array) {
+                    $traversable = IterablesTest::_testCountTraversable($array);
+                    $cnt = Iterables::count($traversable, false);
+                    Assert::assertFalse($traversable->calledCount());
+                    return $cnt;
+                },
+                $expect
+            ]),
+            new Provided('Traversable&count', [
+                function () use ($array) {
+                    $traversable = IterablesTest::_testCountTraversable($array);
+                    $cnt = Iterables::count($traversable, true);
+                    Assert::assertTrue($traversable->calledCount());
+                    return $cnt;
+                },
+                $expect
+            ]),
+        ];
+        return Provided::merge($provide);
+    }
+
+    #[DataProvider('_testCount')]
+    public function testCount(\Closure $count, int $expect): void
+    {
+        $this->assertSame($expect, $count());
     }
 
     // ========================================================================

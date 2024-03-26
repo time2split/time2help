@@ -35,9 +35,16 @@ final class Iterables
 
     // ========================================================================
 
-    public static function count(iterable $sequence): int
+    /**
+     * Count the number of entries of a sequence.
+     * 
+     * @param iterable $sequence A sequence.
+     * @param bool $allowCountable Allow to use \count($sequence) if the sequence is \Countable.
+     * @return int The number of entries.
+     */
+    public static function count(iterable $sequence, bool $allowCountable = false): int
     {
-        if (\is_array($sequence) || $sequence instanceof \Countable)
+        if (\is_array($sequence) || ($allowCountable && $sequence instanceof \Countable))
             return \count($sequence);
 
         $i = 0;
