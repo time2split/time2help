@@ -4,7 +4,7 @@ namespace Time2Split\Help;
 use Time2Split\Help\Classes\NotInstanciable;
 
 /**
- * Functions for File Inputs/Outputs.
+ * Functions for stream resource.
  * 
  * @author Olivier Rodriguez (zuri)
  */
@@ -160,6 +160,15 @@ final class Streams
     }
 
     // ========================================================================
+
+    /**
+     * Base routine to implement a procedure skipping some chars according to a predicate.
+     *
+     * @param \Closure $fgetc ($fgetc()) read a char from a stream.
+     * @param \Closure $fungetc  ($fungetc()) decrement the stream position.
+     * @param \Closure $predicate ($predicate(string $char)) return true if the character must be skipped.
+     * @return integer The number of skipped character.
+     */
     public static function skipChars(\Closure $fgetc, \Closure $fungetc, \Closure $predicate): int
     {
         $nb = 0;
@@ -173,6 +182,14 @@ final class Streams
         return $nb;
     }
 
+    /**
+     * Base routine to implement a procedure reading some chars according to a predicate.
+     *
+     * @param \Closure $fgetc ($fgetc()) read a char from a stream.
+     * @param \Closure $fungetc  ($fungetc()) decrement the stream position.
+     * @param \Closure $predicate ($predicate(string $char)) return true if the character must be read.
+     * @return string The string of the read characters.
+     */
     public static function getChars(\Closure $fgetc, \Closure $fungetc, \Closure $predicate): string
     {
         $ret = '';
@@ -186,7 +203,14 @@ final class Streams
         return $ret;
     }
 
-
+    /**
+     * Base routine to implement a procedure skipping some chars until a predicate is true.
+     *
+     * @param \Closure $fgetc ($fgetc()) read a char from a stream.
+     * @param \Closure $fungetc  ($fungetc()) decrement the stream position.
+     * @param \Closure $predicate ($predicate(string $char)) return true if the character stop the reading.
+     * @return integer The number of skipped character.
+     */
     public static function skipCharsUntil(\Closure $fgetc, \Closure $fungetc, \Closure $predicate): int
     {
         $nb = 0;
@@ -204,7 +228,14 @@ final class Streams
         }
     }
 
-
+    /**
+     * Base routine to implement a procedure reading some chars until a predicate is true.
+     *
+     * @param \Closure $fgetc ($fgetc()) read a char from a stream.
+     * @param \Closure $fungetc  ($fungetc()) decrement the stream position.
+     * @param \Closure $predicate ($predicate(string $char)) return true if the character stop the reading.
+     * @return string The string of the read characters.
+     */
     public static function getCharsUntil(\Closure $fgetc, \Closure $fungetc, \Closure $predicate): string
     {
         $ret = '';

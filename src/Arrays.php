@@ -5,6 +5,7 @@ namespace Time2Split\Help;
 /**
  * Functions on arrays.
  * 
+ * @package time2help\container
  * @author Olivier Rodriguez (zuri)
  */
 final class Arrays

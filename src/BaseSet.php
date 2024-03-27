@@ -2,28 +2,35 @@
 namespace Time2Split\Help;
 
 /**
- * A set data-structure to store some types of items once.
+ * A set data-structure to store elements.
+ * 
+ * An element can only be assigned once in a set.
+ * The comparison operation to check if two elements are equals depends on the set implementation.
  *
+ * This library always provides implementations extending the abstract class {@see Set}.
+ * The class {@see Sets} provides static factory methods to create instances of {@see Set}.
+ * 
+ * @package time2help\container
  * @author Olivier Rodriguez (zuri)
  */
 interface BaseSet extends \ArrayAccess, \Countable, \Traversable
 {
 
     /**
-     *
-     * {@inheritdoc}
-     * @return bool <code>true</code> if the value is present, <code>false</code> if not.
-     * @see \ArrayAccess::offsetGet()
+     * Check if an item is assigned to the set.
+     * 
+     * @param mixed $item An item.
+     * @return bool true if the value is assigned, or false if not.
+     * @link https://www.php.net/manual/en/arrayaccess.offsetget.php ArrayAccess::offsetGet()
      */
-    public function offsetGet(mixed $offset): bool;
+    public function offsetGet(mixed $item): bool;
 
     /**
-     *
-     * {@inheritdoc}
-     *
-     * @param bool $value
-     *            <code>true</code> to add the offset as a set item, or <code>false</code> to unset it.
-     * @see \ArrayAccess::offsetSet()
+     * Assign or drop an item.
+     * 
+     * @param mixed $item An item.
+     * @param bool $value true to add the item, or false to drop it.
+     * @link https://www.php.net/manual/en/arrayaccess.offsetset.php ArrayAccess::offsetSet()
      */
-    public function offsetSet($offset, $value): void;
+    public function offsetSet($item, $value): void;
 }

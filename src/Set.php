@@ -2,28 +2,42 @@
 namespace Time2Split\Help;
 
 /**
- * Extends {@link Set} with utility methods.
+ * Extends BaseSet with utility methods.
  *
+ * The class {@see Sets} provides static factory methods to create instances of {@see Set}.
+ * 
+ * @package time2help\container
  * @author Olivier Rodriguez (zuri)
  */
 abstract class Set implements BaseSet
 {
 
-    public final function offsetUnset(mixed $offset): void
+    /**
+     * Drop an item.
+     * 
+     * @param mixed $item An item.
+     */
+    public final function offsetUnset(mixed $item): void
     {
-        $this->offsetSet($offset, false);
-    }
-
-    public final function offsetExists(mixed $offset): bool
-    {
-        return $this->offsetGet($offset);
+        $this->offsetSet($item, false);
     }
 
     /**
-     * Set multiples items.
+     * Check that an item is assigned to the set.
+     * 
+     * @param mixed $item An item.
+     * @return bool true if the value is assigned, or false if not.
+     */
+    public final function offsetExists(mixed $item): bool
+    {
+        return $this->offsetGet($item);
+    }
+
+    /**
+     * Assign multiple items.
      *
      * @param mixed ...$items
-     *            Items to set.
+     *            Items to assign.
      * @return static This set.
      */
     public final function setMore(...$items): static
@@ -34,10 +48,10 @@ abstract class Set implements BaseSet
     }
 
     /**
-     * Unset multiples items.
+     * Drop multiple items.
      *
      * @param mixed ...$items
-     *            Items to unset.
+     *            Items to drop.
      * @return static This set.
      */
     public final function unsetMore(...$items): static
@@ -48,7 +62,7 @@ abstract class Set implements BaseSet
     }
 
     /**
-     * Set multiples items from multiple lists.
+     * Assign multiple items from multiple lists.
      *
      * @param iterable $items
      *            Items to set.
@@ -56,16 +70,18 @@ abstract class Set implements BaseSet
      */
     public final function setFromList(iterable ...$lists): static
     {
-        foreach ($lists as $items) foreach ($items as $item)
+        foreach ($lists as $items) {
+            foreach ($items as $item) 
                 $this->offsetSet($item, true);
+        }
         return $this;
     }
 
     /**
-     * Unset multiples items from multiple lists.
+     * Drop multiples items from multiple lists.
      *
      * @param iterable $items
-     *            Items to unset.
+     *            Items to drop.
      * @return static This set.
      */
     public final function unsetFromList(iterable ...$lists): static

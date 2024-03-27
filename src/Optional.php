@@ -7,6 +7,7 @@ namespace Time2Split\Help;
  * 
  * The class is inspired by that of Java, but contrary to it it allows null values.
  *
+ * @package time2help\container
  * @author Olivier Rodriguez (zuri)
  */
 final class Optional

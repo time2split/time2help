@@ -7,8 +7,9 @@ use Time2Split\Help\Exception\UnmodifiableSetException;
 use Time2Split\Help\_private\Set\SetDecorator;
 
 /**
- * Factories and functions on sets.
+ * Factories and functions on set.
  * 
+ * @package time2help\container
  * @author Olivier Rodriguez (zuri)
  */
 final class Sets
@@ -16,9 +17,9 @@ final class Sets
     use NotInstanciable;
 
     /**
-     * Get a {@link Set} storing items as keys of an array.
+     * Provides a set storing items as array keys.
      *
-     * This set is only convenient for data types that can fit as a array keys.
+     * This set is only convenient for data types that can fit as array keys.
      *
      * @return Set A new set.
      */
@@ -57,11 +58,11 @@ final class Sets
     }
 
     /**
-     * Get an arrayKeys set that can store arbitrary objects
-     * as long as an object can be associated to a unique array key identifier.
+     * Get a self::arrayKeys() able to store arbitrary elements
+     * as long as an element can be associated to a unique array key identifier.
      *
-     * This class permits to handle more types of values and not just array key ones.
-     * It makes a bijection between a valid array key and an object.
+     * This class permits to handle more types of values and not just array keys.
+     * It makes a bijection between a valid array key and an element.
      *
      * @param \Closure $toKey
      *            Map an input item to a valid key.
@@ -97,12 +98,13 @@ final class Sets
     }
 
     /**
-     * A set of a \BackedEnum instances.
+     * A set able to store \BackedEnum instances.
      *
      * @param mixed $enumClass
-     *            The \BackedEnum class to uses for items.
+     *            The \BackedEnum class of the elements to store.
      *            It may be a string class name or a \BackedEnum instance.
-     * @return \Time2Split\Help\Set A new Set.
+     * @return Set A new Set.
+     * @link https://www.php.net/manual/en/class.backedenum.php \BackedEnum
      */
     public static function ofBackedEnum($enumClass = \BackedEnum::class)
     {
@@ -121,7 +123,7 @@ final class Sets
     /**
      * Decorate a set to be unmodifiable.
      *
-     * Call to a mutable method will throws a {@link UnmodifiableSetException}.
+     * Call to a mutable method of the set will throws a {@see Exception\UnmodifiableSetException}.
      *
      * @param Set $set
      *            A set to decorate.

@@ -7,6 +7,7 @@ use Time2Split\Help\Classes\NotInstanciable;
 /**
  * Functions on iterables.
  * 
+ * @package time2help\container
  * @author Olivier Rodriguez (zuri)
  */
 final class Iterables
@@ -458,7 +459,9 @@ final class Iterables
     }
 
     /**
-     * Check if two lists are in an equal relation using one of the php equal operator (== or ===) as keys and values comparison.
+     * Check if two lists are in an equal relation using one of the php equal operator (== or ===) as values comparison.
+     * 
+     * Two lists are in an equal relation if they have the same values in the same order.
      * 
      * @param iterable $a A list of values.
      * @param iterable $b A list of values.
@@ -471,7 +474,7 @@ final class Iterables
     }
 
     /**
-     * Check if a list is the begining of another one according to external values comparison closures.
+     * Check if a list is the begining of another one according to an external values comparison closure.
      * 
      * @param iterable $a The first list of values.
      * @param iterable $b The second list of values.
@@ -485,7 +488,8 @@ final class Iterables
     }
 
     /**
-     * Summary of listPrefixEquals
+     * Check if a list is the begining of another one using one of the php equal operator (== or ===) as values comparison.
+     * 
      * @param iterable $a The first list of values.
      * @param iterable $b The second list of values.
      * @param bool $strictEquals true if the values comparison is ===, or false for ==.
