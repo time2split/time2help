@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 namespace Time2Split\Help;
 
 use Time2Split\Help\Classes\NotInstanciable;
@@ -12,11 +15,24 @@ final class IO
 {
     use NotInstanciable;
 
-    public static function olderThan(string $a, string $b)
+    /**
+     * Finds whether a file is older than another.
+     * 
+     * @param string $a First file.
+     * @param string $b Second file.
+     * @return bool true if \filemtime($a) < \filemtime($b).
+     */
+    public static function olderThan(string $a, string $b): bool
     {
         return \filemtime($a) < \filemtime($b);
     }
 
+    /**
+     * Removes recursively a directory contents.
+     * 
+     * @param string $dir A directory.
+     * @param bool $rmRoot If true then removes also the $dir directory.
+     */
     public static function rrmdir(string $dir, bool $rmRoot = true): void
     {
         $paths = new \RecursiveIteratorIterator(
@@ -38,36 +54,61 @@ final class IO
 
     // ========================================================================
 
-    public static function printPHPFile(string $path, $data, bool $compact = false)
+    /**
+     * Writes a parsable string representation of a variable into a file.
+     * 
+     * @param string $file The file to write.
+     * @param mixed $data The data to write.
+     * @param bool $compact If true then avoid spaces in the contents.
+     * @return int|false The number of bytes that were written to the file, or false on failure.
+     */
+    public static function printPHPFile(string $file, mixed $data, bool $compact = false): int|false
     {
         $s = var_export($data, true);
 
         if ($compact)
             $s = \preg_replace('#\s#', '', $s);
 
-        return \file_put_contents($path, "<?php return $s;");
+        return \file_put_contents($file, "<?php return $s;");
     }
 
     // ========================================================================
 
     private static $wdStack = [];
 
-    public static function wdPush(string $path): void
+    /**
+     * Push the current working directory into an internal stack
+     * and chdir to another directory.
+     * 
+     * @param string $workingDir The new working directory to chdir into.
+     */
+    public static function wdPush(string $workingDir): void
     {
         \array_push(self::$wdStack, \getcwd());
 
-        if (!\chdir($path))
-            throw new \Exception("Cannot chdir to $path");
+        if (!\chdir($workingDir))
+            throw new \Exception("Cannot chdir to $workingDir");
     }
 
+    /**
+     * Pop and chdir the working directory previously pushed with IO::wdPush().
+     * 
+     * @throws \Exception If the stack is empty.
+     */
     public static function wdPop(): void
     {
-        if (empty (self::$wdStack))
+        if (empty(self::$wdStack))
             throw new \Exception("WD stack is empty");
 
         \chdir(\array_pop(self::$wdStack));
     }
 
+    /**
+     * Isolate an operation to be executed into a specific working directory.
+     * 
+     * @param string $workingDir The working directory for the operation.
+     * @param \Closure $exec An operation to execute.
+     */
     public static function wdOp(string $workingDir, \Closure $exec)
     {
         self::wdPush($workingDir);
@@ -78,26 +119,69 @@ final class IO
 
     // ========================================================================
 
-    public static function scandirNoPoints(string $path, bool $getPath = false): array
+    /**
+     * List files and directories directly inside the specified path but not the ones
+     * begining by a point char (ie: hidden files in a linux filesystem).
+     * 
+     * @param string $directory A directory to scan.
+     * @param bool $getDirectory If true then the returned paths are prefixed with "$directory/".
+     * @return string[] The files and directories from $directory.
+     */
+    public static function scandirNoPoints(string $directory, bool $getDirectory = false): array
     {
-        $ret = \array_filter(\scandir($path), fn ($f) => $f[0] !== '.');
+        $ret = \array_filter(\scandir($directory), fn ($f) => $f[0] !== '.');
         \natcasesort($ret);
 
-        if ($getPath)
-            $ret = \array_map(fn ($v) => "$path/$v", $ret);
+        if ($getDirectory)
+            $ret = \array_map(fn ($v) => "$directory/$v", $ret);
 
         return $ret;
     }
 
     // ========================================================================
 
-    public static function get_ob(\Closure $f): string
+    /**
+     * Executes an operation and retrieves its output from stdout/stderr as a string.
+     * 
+     * @param \Closure $exec An operation to execute.
+     * @return string A string containing the operation's output from stdin and stderr.
+     */
+    public static function get_ob(\Closure $exec): string
     {
         \ob_start();
-        $f();
+        $exec();
         return \ob_get_clean();
     }
 
+    /**
+     * Executes a cli command with some input, 
+     * stores stdin and stderr into variables 
+     * and returns its exit code.
+     * 
+     * The $output and $err has two roles in the function.
+     * Firstly, they define the stdout and stderr descriptor spec of the \proc_open() php function.
+     * Each element can be:
+     * - An array describing the pipe to pass to the process.
+     * The first element is the descriptor type and the second element is an option for the given type.
+     * Valid types are pipe (the second element is either r to pass the read end of the pipe to the process,
+     * or w to pass the write end) and file (the second element is a filename).
+     * Note that anything else than w is treated like r.
+     * - A stream resource representing a real file descriptor (e.g. opened file, a socket, STDIN).
+     * 
+     * Secondly, at the end of the function $output is filled with the content of stdout and $err with stderr.
+     * 
+     * @param string $cmd The command to execute as a process.
+     * @param mixed  &$output
+     * - (input) As an input argument it corresponds to the stdout \proc_open() descriptor_spec parameter.
+     * - (return) At the return it is filled with the stdout stream of the process.
+     * @param mixed  &$err
+     * - (input) As an input argument it corresponds to the stderr \proc_open() descriptor_spec parameter.
+     * - (return) At the return it is filled with the stderr stream of the process.
+     * @param ?string $input An input to send to stdin for the process.
+     * @return int The exit code of the process.
+     * 
+     * @see https://www.php.net/manual/fr/function.proc-open.php \proc_open()
+     */
     public static function simpleExec(string $cmd, &$output, &$err, ?string $input = null): int
     {
         $parseDesc = fn ($d) => \in_array($d, [
@@ -126,25 +210,42 @@ final class IO
         while (($status = \proc_get_status($proc))['running'])
             \usleep(10);
 
-        if (isset ($pipes[1]))
+        if (isset($pipes[1]))
             $output = \stream_get_contents($pipes[1]);
-        if (isset ($pipes[2]))
+        if (isset($pipes[2]))
             $err = \stream_get_contents($pipes[2]);
 
         return $status['exitcode'];
     }
 
-    public static function get_include_contents(string $filename, array $variables = [], string $uniqueVar = '')
+    /**
+     * Includes a file and retrieves its output from stdout/stderr as a string.
+     * 
+     * This function can create variables into the symbol table of the included using a combination of the $variables/$uniqueVar parameters.
+     * 
+     * @param string $file A file to include.
+     * @param array $variables Variables to import into the symbol table
+     *  before the file inclusion (with \extract($variables)).
+     * @param string $uniqueVar If not empty then it is a variable name to assign
+     *  to the array $variables before the inclusion ($$uniqueVar = $variables).
+     *  In this case only $$uniqueVar will appears as a variable in the included file.
+     * 
+     * @return string|false The contents of stdout/stderr as a string, or false if $file is not a file.
+     * 
+     * @see https://www.php.net/manual/en/function.extract.php
+     * @see https://www.php.net/manual/en/function.include.php
+     */
+    public static function get_include_contents(string $file, array $variables = [], string $uniqueVar = ''): string|false
     {
-        if (is_file($filename)) {
+        if (\is_file($file)) {
 
-            if (empty ($uniqueVar))
+            if (empty($uniqueVar))
                 \extract($variables);
             else
                 $$uniqueVar = $variables;
 
             \ob_start();
-            include $filename;
+            include $file;
             return \ob_get_clean();
         }
         return false;

@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 namespace Time2Split\Help;
 
 /**
@@ -64,14 +67,14 @@ abstract class Set implements BaseSet
     /**
      * Assign multiple items from multiple lists.
      *
-     * @param iterable $items
-     *            Items to set.
+     * @param iterable ...$lists
+     *            Lists of items to drop.
      * @return static This set.
      */
     public final function setFromList(iterable ...$lists): static
     {
         foreach ($lists as $items) {
-            foreach ($items as $item) 
+            foreach ($items as $item)
                 $this->offsetSet($item, true);
         }
         return $this;
@@ -80,8 +83,8 @@ abstract class Set implements BaseSet
     /**
      * Drop multiples items from multiple lists.
      *
-     * @param iterable $items
-     *            Items to drop.
+     * @param iterable ...$lists
+     *            Lists of items to drop.
      * @return static This set.
      */
     public final function unsetFromList(iterable ...$lists): static

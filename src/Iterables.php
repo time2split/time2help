@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 namespace Time2Split\Help;
 
 use Time2Split\Help\Classes\NotInstanciable;
@@ -18,7 +20,7 @@ final class Iterables
      * Ensure that an iterable is rewindable.
      * 
      * @param iterable $array An iterable.
-     * @param bool $anIteratorIsRewritable
+     * @param bool $iteratorClassIsRewindable
      *      true if the sent $array is a rewindable iterable or a \Generator.
      * @return \Iterator Return a rewindable iterator.
      */
@@ -177,8 +179,7 @@ final class Iterables
 
         $k = $default;
 
-        foreach ($sequence as $k => $NotUsed)
-            ;
+        foreach ($sequence as $k => $NotUsed);
         return $k;
     }
 
@@ -192,8 +193,7 @@ final class Iterables
 
         $v = $default;
 
-        foreach ($sequence as $v)
-            ;
+        foreach ($sequence as $v);
         return $v;
     }
 
@@ -219,8 +219,7 @@ final class Iterables
         if (\is_array($sequence))
             yield from Arrays::last($sequence);
         else {
-            foreach ($sequence as $k => $v)
-                ;
+            foreach ($sequence as $k => $v);
             yield $k => $v;
         }
     }
@@ -274,7 +273,7 @@ final class Iterables
      * 
      * @param iterable $sequence A sequence of entries.
      * @param int $offset A positive offset from wich to begin.
-     * @param mixed $length A positive length of the number of entries to read.
+     * @param int $length A positive length of the number of entries to read.
      * @return \Iterator An iterator of the selected slice.
      * @throws \DomainException If the offset or the length is negative.
      */

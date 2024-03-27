@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 namespace Time2Split\Help;
 
 /**
@@ -110,7 +112,7 @@ final class Arrays
      */
     public static function first(array $array): \Iterator
     {
-        if (empty ($array))
+        if (empty($array))
             return;
 
         $k = \array_key_first($array);
@@ -122,7 +124,7 @@ final class Arrays
      */
     public static function last(array $array): \Iterator
     {
-        if (empty ($array))
+        if (empty($array))
             return;
 
         $k = \array_key_last($array);
@@ -136,7 +138,7 @@ final class Arrays
      */
     public static function firstKey(array $array, $default = null): mixed
     {
-        if (empty ($array))
+        if (empty($array))
             return $default;
 
         return \array_key_first($array);
@@ -147,7 +149,7 @@ final class Arrays
      */
     public static function firstValue(array $array, $default = null): mixed
     {
-        if (empty ($array))
+        if (empty($array))
             return $default;
 
         return $array[\array_key_first($array)];
@@ -158,7 +160,7 @@ final class Arrays
      */
     public static function lastKey(array $array, $default = null): mixed
     {
-        if (empty ($array))
+        if (empty($array))
             return $default;
 
         return \array_key_last($array);
@@ -169,7 +171,7 @@ final class Arrays
      */
     public static function lastValue(array $array, $default = null): mixed
     {
-        if (empty ($array))
+        if (empty($array))
             return $default;
 
         return $array[\array_key_last($array)];
@@ -290,7 +292,7 @@ final class Arrays
      */
     public static function cartesianProduct(iterable ...$arrays): \Iterator
     {
-        if (empty ($arrays)) {
+        if (empty($arrays)) {
             return [];
         }
 
@@ -372,12 +374,12 @@ final class Arrays
 
     public static function &follow(array &$array, array $path, $default = null)
     {
-        if (empty ($path))
+        if (empty($path))
             return $array;
 
         $p = &$array;
 
-        for (; ; ) {
+        for (;;) {
             $k = \array_shift($path);
 
             if (!\array_key_exists($k, $p))
@@ -385,9 +387,9 @@ final class Arrays
 
             $p = &$p[$k];
 
-            if (empty ($path))
+            if (empty($path))
                 return $p;
-            if (!is_array($p) && !empty ($path))
+            if (!is_array($p) && !empty($path))
                 return $default;
         }
     }
@@ -413,7 +415,7 @@ final class Arrays
                 $ret[$k] = $v;
         }
         return $ret;
-    }
+    }  
 
     // ========================================================================
 
@@ -621,8 +623,7 @@ final class Arrays
         $toProcess = [
             [
                 [],
-                &
-                $data
+                &$data
             ]
         ];
         if (null === $walk)
@@ -630,7 +631,7 @@ final class Arrays
         if (null === $fdown)
             $fdown = fn () => true;
 
-        while (!empty ($toProcess)) {
+        while (!empty($toProcess)) {
             $nextToProcess = [];
 
             foreach ($toProcess as $tp) {
@@ -640,13 +641,12 @@ final class Arrays
                 foreach ($array as $k => &$val) {
                     $path[] = $k;
 
-                    if (\is_array($val) && !empty ($val)) {
+                    if (\is_array($val) && !empty($val)) {
 
                         if ($fdown($path, $val))
                             $nextToProcess[] = [
                                 $path,
-                                &
-                                $val
+                                &$val
                             ];
                     } else
                         $walk($path, $val);
@@ -674,11 +674,10 @@ final class Arrays
     public static function walk_depth(array &$data, \Closure $walk): void
     {
         $toProcess = [
-            &
-            $data
+            &$data
         ];
 
-        while (!empty ($toProcess)) {
+        while (!empty($toProcess)) {
             $nextToProcess = [];
 
             foreach ($toProcess as &$item) {
@@ -695,7 +694,7 @@ final class Arrays
     public static function is_almost_list(array $array): bool
     {
         $notInt = \array_filter(\array_keys($array), fn ($k) => !\is_int($k));
-        return empty ($notInt);
+        return empty($notInt);
     }
 
     public static function reindex_list(array &$array): void
