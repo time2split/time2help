@@ -1,5 +1,7 @@
 <?php
-declare(strict_types = 1);
+
+declare(strict_types=1);
+
 namespace Time2Split\Help\Tests\DataProvider;
 
 use Time2Split\Help\Arrays;
@@ -22,29 +24,29 @@ final class Provided
      * Create a new Provided.
      *
      * @param string $header The header is the name of the dataset in PHPUnit.
-     * @param array $data The arguments to provide to the PHPUnit test method.
+     * @param mixed[] $data The arguments to provide to the PHPUnit test method.
      */
-    public function __construct( //
-    private readonly string $header, //
-    private readonly array $data) //
-    {}
+    public function __construct(
+        public readonly string $header,
+        public readonly array $data
+    ) {
+    }
 
     /**
      * Cartesian product of arrays of Provided.
      *
      * @param Provided[] ...$provided The Provided arrays to compose.
-     * @return iterable of datasets to send as arguments to a PHPUnit test method.
+     * @return iterable<mixed[]> iterable of datasets to send as arguments to a PHPUnit test method.
      * The return of this method is intended to be the return of a PHPUnit DataProvider method. 
      */
     public static function merge(array ...$provided): iterable
     {
         return (function () use ($provided) {
-            $prod = Arrays::cartesianProduct(...$provided);
-            $prod = Arrays::mergeCartesianProduct($prod);
+            $prod = Arrays::cartesianProductMerger(...$provided);
 
             foreach ($prod as $line) {
-                $header = \implode('/', \array_map(fn ($p) => $p->header, $line));
-                $data = \array_merge(...\array_map(fn ($p) => $p->data, $line));
+                $header = \implode('/', \array_map(fn (self $p) => $p->header, $line));
+                $data = \array_merge(...\array_map(fn (self $p) => $p->data, $line));
 
                 foreach ($data as $k => $v) {
                     if ($v instanceof Producer)

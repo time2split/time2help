@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 namespace Time2Split\Help;
 
 use Time2Split\Help\Classes\NotInstanciable;
@@ -21,12 +23,16 @@ final class Sets
      *
      * This set is only convenient for data types that can fit as array keys.
      *
-     * @return Set A new set.
+     * @return Set<string|int> A new set.
      */
     public static function arrayKeys(): Set
     {
-        return new class () extends Set implements \IteratorAggregate {
+        return new class() extends Set implements \IteratorAggregate
+        {
 
+            /**
+             * @var array<string|int,bool>
+             */
             private array $storage = [];
 
             public function offsetGet(mixed $offset): bool
@@ -68,12 +74,16 @@ final class Sets
      *            Map an input item to a valid key.
      * @param \Closure $fromKey
      *            Retrieves the base object from the array key.
-     * @return Set A new Set.
+     * @return Set<mixed> A new Set.
      */
     public static function toArrayKeys(\Closure $toKey, \Closure $fromKey): Set
     {
-        return new class (self::arrayKeys(), $toKey, $fromKey) extends SetDecorator {
-
+        /** @extends SetDecorator<int|string,mixed> */
+        return new class(self::arrayKeys(), $toKey, $fromKey) extends SetDecorator
+        {
+            /**
+             * @param Set<string|int> $decorate
+             */
             public function __construct(Set $decorate, private readonly \Closure $toKey, private readonly \Closure $fromKey)
             {
                 parent::__construct($decorate);
@@ -100,10 +110,11 @@ final class Sets
     /**
      * A set able to store \BackedEnum instances.
      *
-     * @param mixed $enumClass
-     *            The \BackedEnum class of the elements to store.
-     *            It may be a string class name or a \BackedEnum instance.
-     * @return Set A new Set.
+     * @template T of \BackedEnum
+     * @param string|T $enumClass
+     *            The backed enum class of the elements to store.
+     *            It may be a string class name of T or a T instance.
+     * @return Set<T> A new Set.
      * @link https://www.php.net/manual/en/class.backedenum.php \BackedEnum
      */
     public static function ofBackedEnum($enumClass = \BackedEnum::class)
@@ -111,10 +122,15 @@ final class Sets
         if (!\is_a($enumClass, \BackedEnum::class, true))
             throw new \InvalidArgumentException("$enumClass must be a \BackedEnum");
 
+        /** @var Set<T> */
         return self::toArrayKeys(function (\BackedEnum $enum) use ($enumClass) {
 
             if (!$enum instanceof $enumClass)
-                throw new \InvalidArgumentException(sprintf('Enum must be of type %s, have %s', $enumClass, \get_class($enum)));
+                throw new \InvalidArgumentException(sprintf(
+                    'Enum must be of type %s, have %s',
+                    \is_string($enumClass) ? $enumClass : \get_class($enumClass),
+                    \get_class($enum)
+                ));
 
             return $enum->value;
         }, $enumClass::from(...));
@@ -125,13 +141,15 @@ final class Sets
      *
      * Call to a mutable method of the set will throws a {@see Exception\UnmodifiableSetException}.
      *
-     * @param Set $set
+     * @template T
+     * @param Set<T> $set
      *            A set to decorate.
-     * @return Set The unmodifiable set.
+     * @return Set<T> The unmodifiable set.
      */
     public static function unmodifiable(Set $set): Set
     {
-        return new class ($set) extends SetDecorator {
+        return new class($set) extends SetDecorator
+        {
 
             public function offsetSet(mixed $offset, mixed $value): void
             {
@@ -140,16 +158,20 @@ final class Sets
         };
     }
 
+    /**
+     * @var Set<void>
+     */
     private static Set $null;
 
     /**
      * Get the null pattern unmodifiable set.
      *
-     * @return Set The unique null pattern set.
+     * @return Set<void> The unique null pattern set.
      */
     public static function null(): Set
     {
-        return self::$null ??= new class () extends Set implements \IteratorAggregate {
+        return self::$null ??= new class() extends Set implements \IteratorAggregate
+        {
 
             private readonly \Iterator $iterator;
 

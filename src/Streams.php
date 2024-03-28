@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 namespace Time2Split\Help;
 
 use Time2Split\Help\Classes\NotInstanciable;
@@ -14,10 +17,15 @@ final class Streams
 
     /**
      * Get a stream from a string.
+     * @return resource
      */
     public static function stringToStream(string $text = '', string $mode = 'r+')
     {
         $stream = \fopen('php://memory', $mode);
+
+        if (false === $stream)
+            throw new \AssertionError();
+
         \fwrite($stream, $text);
         \rewind($stream);
         return $stream;
@@ -26,26 +34,28 @@ final class Streams
     /**
      * Check if a stream is seekable.
      * 
-     * @param mixed $stream A resource stream.
-     * @param null|array $meta_data The meta data of the stream obtained from \stream_get_meta_data().
+     * @param resource $stream A resource stream.
+     * @param null|array<string,mixed> $meta_data The meta data of the stream obtained from \stream_get_meta_data().
      * @return bool true if the \fseek() function may be used on the stream.
      */
     public static function isSeekableStream($stream, array $meta_data = null): bool
     {
         $meta_data ??= \stream_get_meta_data($stream);
+        /** @var bool */
         return $meta_data['seekable'];
     }
 
     /**
      * Check if a stream is readable.
      * 
-     * @param mixed $stream A resource stream.
-     * @param null|array $meta_data The meta data of the stream obtained from \stream_get_meta_data().
+     * @param resource $stream A resource stream.
+     * @param null|array<string,mixed> $meta_data The meta data of the stream obtained from \stream_get_meta_data().
      * @return bool true if the stream is readable.
      */
     public static function isReadableStream($stream, array $meta_data = null): bool
     {
         $meta_data ??= \stream_get_meta_data($stream);
+        /** @var string */
         $mode = $meta_data['mode'];
 
         return \str_starts_with($mode, 'r') || \str_contains($mode, '+');
@@ -64,7 +74,7 @@ final class Streams
         if (\is_string($stream))
             return self::stringToStream($stream);
 
-        $meta_data ??= \stream_get_meta_data($stream);
+        $meta_data = \stream_get_meta_data($stream);
 
         if (
             \is_resource($stream)
@@ -89,7 +99,7 @@ final class Streams
     /**
      * Skip some characters from a stream according to a predicate.
      * 
-     * @param mixed $stream A stream.
+     * @param resource $stream A stream.
      * @param \Closure $predicate A predicate that return true if its input character must be read.
      * @return int The number of read character.
      */
@@ -104,7 +114,7 @@ final class Streams
     /**
      * Skip some characters from a stream until a predicate is true.
      * 
-     * @param mixed $stream A stream.
+     * @param resource $stream A stream.
      * @param \Closure $predicate A predicate that return true if its input character must not be read.
      * @return int The number of read character.
      */
@@ -116,9 +126,9 @@ final class Streams
     /**
      * Get some characters from a stream according to a predicate.
      * 
-     * @param mixed $stream A stream.
+     * @param resource $stream A stream.
      * @param \Closure $predicate A predicate that return true if its input character must be read.
-     * @return string|null A string containing the read characters, or null if none is read.
+     * @return string A string containing the read characters.
      */
     public static function streamGetChars($stream, \Closure $predicate): string
     {
@@ -132,9 +142,9 @@ final class Streams
     /**
      * Get some characters from a stream until a character or a predicate is true.
      * 
-     * @param mixed $stream A stream.
-     * @param \Closure|string $endDelimiter A predicate closure that return true if its input character must not be read, or a character that must end the reading when encountered in the stream.
-     * @return string|null A string containing the read characters, or null if none is read.
+     * @param resource $stream A stream.
+     * @param \Closure $endDelimiter A predicate closure that return true if its input character must not be read, or a character that must end the reading when encountered in the stream.
+     * @return string A string containing the read characters.
      */
     public static function streamGetCharsUntil($stream, \Closure $endDelimiter): string
     {
@@ -146,9 +156,11 @@ final class Streams
     }
 
     /**
-     * Summary of streamUngetc
-     * @param mixed $stream
-     * @return bool
+     * Decrement the stream position of some chars.
+     * 
+     * @param resource $stream A stream to decrement.
+     * @param int $nb The number of positions to decrement.
+     * @return bool true on success, false on failure.
      * @throws \DomainException if $nb is not positive.
      */
     public static function streamUngetc($stream, int $nb = 1): bool
@@ -156,7 +168,7 @@ final class Streams
         if ($nb < 0)
             throw new \DomainException("\$nb must be positive, have $nb");
 
-        return \fseek($stream, -$nb, SEEK_CUR);
+        return 0 === \fseek($stream, -$nb, SEEK_CUR);
     }
 
     // ========================================================================

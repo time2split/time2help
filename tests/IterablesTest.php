@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 namespace Time2Split\Help\Tests;
 
 use PHPUnit\Framework\Assert;
@@ -69,7 +71,7 @@ final class IterablesTest extends TestCase
             self::makeIteratorTestMethod('mapValue', \array_combine(\array_keys(self::testIteratorMethodsArray), $mapped), $mapv),
         ];
 
-        $limits = Arrays::mergeCartesianProduct(Arrays::cartesianProduct([0, 1, 2], [0, 1, 2, 3]));
+        $limits = Arrays::cartesianProductMerger([0, 1, 2], [0, 1, 2, 3]);
 
         foreach ($limits as list($offset, $length)) {
             $expect = \array_slice(self::testIteratorMethodsArray, $offset, $length, true);
@@ -94,7 +96,8 @@ final class IterablesTest extends TestCase
 
     public static function _testCountTraversable(array $array)
     {
-        return new class ($array) extends \ArrayObject {
+        return new class($array) extends \ArrayObject
+        {
 
             private bool $count = false;
 
@@ -278,7 +281,6 @@ final class IterablesTest extends TestCase
 
             if ($strictPrefix)
                 $ret = \array_merge($ret, self::_makePrefixTest($a, $b, $strictCmp, false, true));
-
         } elseif (!$strictPrefix)
             $ret = \array_merge($ret, self::_makePrefixTest($a, $b, $strictCmp, true, false));
 

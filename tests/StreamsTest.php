@@ -1,5 +1,7 @@
 <?php
+
 declare(strict_types=1);
+
 namespace Time2Split\Help\Tests;
 
 use PHPUnit\Framework\Assert;

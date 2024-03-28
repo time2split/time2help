@@ -1,21 +1,27 @@
 <?php
+
 declare(strict_types=1);
+
 namespace Time2Split\Help\Tests;
 
 use PHPUnit\Framework\TestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
+use stdClass;
 use Time2Split\Help\Arrays;
+use Time2Split\Help\Iterables;
 use Time2Split\Help\Tests\DataProvider\Provided;
 
 use function \iterator_to_array as toArray;
 
 final class ArraysTest extends TestCase
 {
-    private const testIteratorMethodsArray = [
+    private const array_abc = [
         'a' => 1,
         'b' => 2,
         'c' => 3
     ];
+
+    private const list_abc = ['a', 'b', 'c'];
 
     private static function makeIteratorTestMethod(string $method, $expect): Provided
     {
@@ -33,15 +39,15 @@ final class ArraysTest extends TestCase
         $methods = [
             new Provided('same', [
                 fn ($a) => $a,
-                self::testIteratorMethodsArray
+                self::array_abc
             ]),
-            self::makeIteratorTestMethod('keys', \array_keys(self::testIteratorMethodsArray)),
-            self::makeIteratorTestMethod('values', \array_values(self::testIteratorMethodsArray)),
-            self::makeIteratorTestMethod('flip', \array_flip(self::testIteratorMethodsArray)),
-            self::makeIteratorTestMethod('reverse', \array_reverse(self::testIteratorMethodsArray)),
-            self::makeIteratorTestMethod('reverseKeys', \array_reverse(\array_keys(self::testIteratorMethodsArray))),
-            self::makeIteratorTestMethod('reverseValues', \array_reverse(\array_values(self::testIteratorMethodsArray))),
-            self::makeIteratorTestMethod('reverseFlip', \array_reverse(\array_flip(self::testIteratorMethodsArray), true)),
+            self::makeIteratorTestMethod('keys', \array_keys(self::array_abc)),
+            self::makeIteratorTestMethod('values', \array_values(self::array_abc)),
+            self::makeIteratorTestMethod('flip', \array_flip(self::array_abc)),
+            self::makeIteratorTestMethod('reverse', \array_reverse(self::array_abc)),
+            self::makeIteratorTestMethod('reverseKeys', \array_reverse(\array_keys(self::array_abc))),
+            self::makeIteratorTestMethod('reverseValues', \array_reverse(\array_values(self::array_abc))),
+            self::makeIteratorTestMethod('reverseFlip', \array_reverse(\array_flip(self::array_abc), true)),
             self::makeIteratorTestMethod('first', ['a' => 1]),
             self::makeIteratorTestMethod('last', ['c' => 3]),
             self::makeIteratorTestMethod('firstKey', 'a'),
@@ -55,7 +61,7 @@ final class ArraysTest extends TestCase
     #[DataProvider("_testIteratorMethods")]
     public function testIteratorMethods(\Closure $construct, \Closure $test, $expect): void
     {
-        $obj = $construct(self::testIteratorMethodsArray);
+        $obj = $construct(self::array_abc);
         $res = $test($obj);
 
         if (\is_iterable($res))
@@ -180,13 +186,13 @@ final class ArraysTest extends TestCase
     #[DataProvider('diffProvider')]
     public function testDiff(bool $strict, array $a, array $b, array $resultab, $resultba): void
     {
-        $diff = \iterator_to_array(Arrays::searchValueWithoutEqualRelation($a, $b, $strict));
+        $diff = \iterator_to_array(Arrays::diffEntries($a, $b, $strict));
         $this->assertSame($resultab, $diff);
-        $diff = \iterator_to_array(Arrays::searchValueWithoutEqualRelation($b, $a, $strict));
+        $diff = \iterator_to_array(Arrays::diffEntries($b, $a, $strict));
         $this->assertSame($resultba, $diff);
 
-        $equals = empty ($resultab) && empty ($resultba);
-        $this->assertSame($equals, Arrays::contentEquals($a, $b, $strict));
+        $equals = empty($resultab) && empty($resultba);
+        $this->assertSame($equals, Arrays::sameEntries($a, $b, $strict));
     }
 
     // ========================================================================
@@ -273,11 +279,53 @@ final class ArraysTest extends TestCase
         $expected = self::cartesianResult(...$generators);
         $result = Arrays::cartesianProduct(...\array_map(fn ($g) => \iterator_to_array($g()), $generators));
 
-        $expected = Arrays::mergeCartesianProduct($expected);
-        $result = Arrays::mergeCartesianProduct($result);
+        $expected = Arrays::cartesianProductMerger($expected);
+        $result = Arrays::cartesianProductMerger($result);
         $this->checkCartesianResult($count, $expected, $result);
     }
 
     // ========================================================================
 
+    private static function testSubSelect_expect(array $array, array $keys): array
+    {
+        $ret = [];
+        foreach ($keys as $k)
+            $ret[$k] = $array[$k];
+        return $ret;
+    }
+
+    public function testSubSelect(): void
+    {
+        $nb = \count(self::array_abc);
+        $abckeys = \array_keys(self::array_abc);
+
+        for ($i = 0; $i < $nb; $i++) {
+            $keys = \array_slice($abckeys, 0, $i);
+            $expect = self::testSubSelect_expect(self::array_abc, $keys);
+            $this->assertSame($expect, Arrays::select(self::array_abc, $keys));
+
+            if ($i < 2) continue;
+            $keys = \array_reverse($keys);
+            $expect = self::testSubSelect_expect(self::array_abc, $keys);
+            $this->assertSame($expect, Arrays::select(self::array_abc, $keys));
+        }
+        $expect = ['a' => 1, 'x' => false];
+        $this->assertSame($expect, Arrays::select(self::array_abc, ['a', 'x'], false));
+    }
+
+    // ========================================================================
+
+
+    public function testListValueAsKey(): void
+    {
+        $default = true;
+        $expect = \array_combine(self::list_abc, \array_fill(0, 3, $default));
+        $this->assertSame($expect, Arrays::replaceIntKeyByItsValue($expect, $default));
+
+        $it = Iterables::flip([new stdClass()]);
+    }
+
+    // ========================================================================
+    // UPDATE
+    // ========================================================================
 }

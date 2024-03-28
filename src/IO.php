@@ -35,6 +35,7 @@ final class IO
      */
     public static function rrmdir(string $dir, bool $rmRoot = true): void
     {
+        /** @var \Iterator<\SplFileInfo> */
         $paths = new \RecursiveIteratorIterator(
             new \RecursiveDirectoryIterator($dir, \RecursiveDirectoryIterator::SKIP_DOTS),
             \RecursiveIteratorIterator::CHILD_FIRST,
@@ -74,7 +75,10 @@ final class IO
 
     // ========================================================================
 
-    private static $wdStack = [];
+    /**
+     * @var string[]
+     */
+    private static array $wdStack = [];
 
     /**
      * Push the current working directory into an internal stack
@@ -108,6 +112,7 @@ final class IO
      * 
      * @param string $workingDir The working directory for the operation.
      * @param \Closure $exec An operation to execute.
+     * @return mixed The return of the operation.
      */
     public static function wdOp(string $workingDir, \Closure $exec)
     {
@@ -126,10 +131,16 @@ final class IO
      * @param string $directory A directory to scan.
      * @param bool $getDirectory If true then the returned paths are prefixed with "$directory/".
      * @return string[] The files and directories from $directory.
+     * @throws \Exception If not able to scan.
      */
     public static function scandirNoPoints(string $directory, bool $getDirectory = false): array
     {
-        $ret = \array_filter(\scandir($directory), fn ($f) => $f[0] !== '.');
+        $list =  \scandir($directory);
+
+        if (false === $list)
+            throw new \Exception("Unable to scan the directory '$directory");
+
+        $ret = \array_filter($list, fn ($f) => $f[0] !== '.');
         \natcasesort($ret);
 
         if ($getDirectory)
@@ -144,13 +155,19 @@ final class IO
      * Executes an operation and retrieves its output from stdout/stderr as a string.
      * 
      * @param \Closure $exec An operation to execute.
-     * @return string A string containing the operation's output from stdin and stderr.
+     * @return string A string containing the operation's output from stdin and stderr, or false on failure.
+     * @throws \Exception If not able to retrieves the string.
      */
     public static function get_ob(\Closure $exec): string
     {
         \ob_start();
         $exec();
-        return \ob_get_clean();
+        $ret = \ob_get_clean();
+
+        if ($ret === false)
+            throw new \Exception(\sprintf('Unable to retrieves the string buffer, have %d chars to retrieves', \ob_get_length()));
+
+        return $ret;
     }
 
     /**
@@ -179,6 +196,7 @@ final class IO
      * - (return) At the return it is filled with the stderr stream of the process.
      * @param ?string $input An input to send to stdin for the process.
      * @return int The exit code of the process.
+     * @throws \Exception If not able to execute the command.
      * 
      * @see https://www.php.net/manual/fr/function.proc-open.php \proc_open()
      */
@@ -202,6 +220,9 @@ final class IO
         $pipes = null;
         $proc = \proc_open($cmd, $descriptors, $pipes);
 
+        if ($proc === false)
+            throw new \Exception('Not able to launch a process');
+
         if (null !== $input)
             \fwrite($pipes[0], $input);
 
@@ -224,7 +245,7 @@ final class IO
      * This function can create variables into the symbol table of the included using a combination of the $variables/$uniqueVar parameters.
      * 
      * @param string $file A file to include.
-     * @param array $variables Variables to import into the symbol table
+     * @param array<string,mixed> $variables Variables to import into the symbol table
      *  before the file inclusion (with \extract($variables)).
      * @param string $uniqueVar If not empty then it is a variable name to assign
      *  to the array $variables before the inclusion ($$uniqueVar = $variables).
