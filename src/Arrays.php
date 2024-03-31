@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Time2Split\Help;
 
-use TreeArrays;
+use ArrayAccess;
 
 /**
  * Functions on arrays.
@@ -253,7 +253,10 @@ final class Arrays
      */
     public static function sameEntries(iterable $a, array $b, bool $strict = false): bool
     {
-        if (\count($a) !== \count($b))
+        if (
+            \is_array($a) && \is_array($b)
+            && \count($a) !== \count($b)
+        )
             return false;
 
         return !self::diffEntries($a, $b, $strict)->valid();
@@ -286,9 +289,9 @@ final class Arrays
      * @template V
      * 
      * @param \Closure $searchRelation
-     *  The callable
-     *  - searchRelation(K $akey, V $aval, array $b):array<K>|K <br>
-     *  to find whether an entry ($akey => $aval) of $a has a relation with an entry of $b.
+     *  - searchRelation(K $akey, V $aval, array $b):array<K>|K
+     * 
+     *  Finds whether an entry ($akey => $aval) of $a has a relation with an entry of $b.
      *  If there is a relation then the callback must return the keys of $b in relation with $aval,
      *  else it must return false.
      * @param Iterable<K,V> $a
@@ -317,9 +320,9 @@ final class Arrays
      * @template V
      * 
      * @param \Closure $searchRelation
-     *  The callable
      *  - searchRelation(K $akey, V $aval, array $b):array<K>|K<br>
-     *  to find whether an entry ($akey => $aval) of $a has a relation with an entry of $b.
+     * 
+     *  Finds whether an entry ($akey => $aval) of $a has a relation with an entry of $b.
      *  If there is a relation then the callback must return the keys of $b in relation with $aval,
      *  else it must return false.
      * @param iterable<K,V> $a
@@ -529,7 +532,8 @@ final class Arrays
      * @param int $mode Flag determining what arguments are sent to callback:
      *  - ARRAY_FILTER_USE_KEY - pass key as the only argument to callback instead of the value
      *  - ARRAY_FILTER_USE_BOTH - pass both value and key as arguments to callback instead of the value
-     *  Default is 0 which will pass value as the only argument to callback instead.
+     *
+     * Default is 0 which will pass value as the only argument to callback instead.
      * @return array<mixed[]> A list of two arrays where $list[0] are the entries validated by the filter
      *  and $list[1] are the remaining entries not filtered of the array.
      */
@@ -548,52 +552,124 @@ final class Arrays
     // ========================================================================
 
     /**
-     * Updates some entries in an array and apply a callback for the non existant ones.
+     * Updates some entries in an array using callbacks.
      *  
-     * @param mixed[] $args The updated ($k => $v) entries to set in the array. 
      * @param mixed[] &$array A reference to an array to update.
-     * @param \Closure $onUnexists
+     * @param iterable<mixed> $args The updated ($k => $v) entries to set in the array. 
+     * @param ?\Closure $onExists
      *  - $onUnexists($k,$v,&$array):void
-     *  Closure to call when trying to update a non existant entry in array.
+     * 
+     *  Updates an existant entry in array.
+     *  If null then an \Exception is thrown for the first existant key entry met.
+     * @param ?\Closure $onUnexists
+     *  - $onUnexists($k,$v,&$array):void
+     * 
+     *  Updates a non existant entry in array.
      *  If null then an \Exception is thrown for the first unexistant key entry met.
-     * @param \Closure $mapKey If set then transform each $args entry to ($mapKey($k) => $v).
+     * @param \Closure $mapKey
+     *  - $mapKey($key):int|string
+     * 
+     *  If set then transform each $args entry to ($mapKey($k) => $v).
      */
-    public static function update(array $args, array &$array, ?\Closure $onUnexists = null, ?\Closure $mapKey = null): void
-    {
+    public static function updateWithClosures(
+        array &$array,
+        iterable $args,
+        ?\Closure $onExists = null,
+        ?\Closure $onUnexists = null,
+        ?\Closure $mapKey = null,
+    ): void {
+        if ($onUnexists === null)
+            $onUnexists = fn ($k, $v, $array) => throw new \Exception("The key '$k' does not exists in the array: " . implode(',', \array_keys($array)));
+        if ($onExists === null)
+            $onExists = fn ($k, $v, $array) => throw new \Exception("The key '$k' already exists in the array: " . implode(',', \array_keys($array)));
         if (null === $mapKey)
             $mapKey = fn ($k) => $k;
-
         foreach ($args as $k => $v) {
             $k = $mapKey($k);
 
-            if (!\array_key_exists($k, $array)) {
-
-                if ($onUnexists === null)
-                    throw new \Exception("The key '$k' does not exists in the array: " . implode(',', \array_keys($array)));
-                else
-                    $onUnexists($k, $v, $array);
-            } else
-                $array[$k] = $v;
+            if (!\array_key_exists($k, $array))
+                $onUnexists($k, $v, $array);
+            else
+                $onExists($k, $v, $array);
         }
+    }
+
+    /**
+     * @param mixed[] $array
+     */
+    private static function updateEntry(string|int $k, mixed $v, array &$array): void
+    {
+        $array[$k] = $v;
+    }
+
+    /**
+     * Updates entries in an array and add the unexistant ones.
+     * 
+     * @param mixed[] &$array A reference to an array to update.
+     * @param iterable<mixed> $args The entries to update.
+     * @param \Closure $mapKey
+     *  - $mapKey($key):int|string
+     * 
+     *  If set then transform each $args entry to ($mapKey($k) => $v).
+     */
+    public static function update(
+        array &$array,
+        iterable $args,
+        ?\Closure $mapKey = null,
+    ): void {
+        self::updateWithClosures($array, $args, self::updateEntry(...), self::updateEntry(...), $mapKey);
     }
 
     /**
      * Updates some existant entries in an array and return the non existant ones.
      * 
-     * @param mixed[] $args The updated ($k => $v) entries to set in the array. 
      * @param mixed[] &$array A reference to an array to update.
-     * @param \Closure $mapKey If set then transform each $args entry to ($mapKey($k) => $v).
+     * @param iterable<mixed> $args The updated ($k => $v) entries to set in the array. 
+     * @param \Closure $mapKey
+     *  - $mapKey($key):int|string
+     * 
+     *  If set then transform each $args entry to ($mapKey($k) => $v).
      * @return mixed[] The updated entries of $args that didn't exists in $array.
      */
-    public static function updateIfPresent(array $args, array &$array, ?\Closure $mapKey = null): array
-    {
+    public static function updateIfPresent(
+        array &$array,
+        iterable $args,
+        ?\Closure $mapKey = null,
+    ): array {
         $remains = [];
         $fstore = function ($k, $v) use (&$remains): void {
             $remains[$k] = $v;
         };
-        self::update($args, $array, $fstore, $mapKey);
+        self::updateWithClosures($array, $args, self::updateEntry(...), $fstore, $mapKey);
         return $remains;
     }
+
+    /**
+     * Updates the non-existant entries in an array and return the existant ones.
+     * 
+     * @param mixed[] &$array A reference to an array to update.
+     * @param iterable<mixed> $args The updated ($k => $v) entries to set in the array. 
+     * @param \Closure $mapKey
+     *  - $mapKey($key):int|string
+     * 
+     *  If set then transform each $args entry to ($mapKey($k) => $v).
+     * @return mixed[] The updated entries of $args that didn't exists in $array.
+     */
+    public static function updateIfAbsent(
+        array &$array,
+        iterable $args,
+        ?\Closure $mapKey = null,
+    ): array {
+        $remains = [];
+        $fstore = function ($k, $v) use (&$remains): void {
+            $remains[$k] = $v;
+        };
+        self::updateWithClosures($array, $args, $fstore, self::updateEntry(...), $mapKey);
+        return $remains;
+    }
+
+    // ========================================================================
+    // REMOVE
 
     /**
      * Deletes an entry from an array and return its value.
@@ -603,7 +679,7 @@ final class Arrays
      * @param mixed $default The value to be returned if there is no value present.
      * @return mixed The removed value, if present, otherwise $default.
      */
-    public static function remove(array &$array, string|int $key, $default = null): mixed
+    public static function removeEntry(array &$array, string|int $key, $default = null): mixed
     {
         if (!\array_key_exists($key, $array))
             return $default;
@@ -617,16 +693,38 @@ final class Arrays
      * Deletes some values from an array.
      * 
      * @param mixed[] &$array A reference to an array.
+     * @param bool $strict If the comparison must be strict (===) or not (==).
      * @param mixed ...$vals Some values to delete.
      */
-    public static function dropValues(array &$array, ...$vals): void
+    public static function dropValues(array &$array, bool $strict, ...$vals): void
     {
         foreach ($vals as $val) {
-            $k = \array_search($val, $array);
+            $k = \array_search($val, $array, $strict);
 
             if (false !== $k)
                 unset($array[$k]);
         }
+    }
+    /**
+     * Deletes some values from an array using the equals (==) operator.
+     * 
+     * @param mixed[] &$array A reference to an array.
+     * @param mixed ...$vals Some values to delete.
+     */
+    public static function dropEqualsValues(array &$array, ...$vals): void
+    {
+        self::dropValues($array, false, ...$vals);
+    }
+    /**
+     * 
+     * Deletes some values from an array using the strictly equals (===) operator.
+     * 
+     * @param mixed[] &$array A reference to an array.
+     * @param mixed ...$vals Some values to delete.
+     */
+    public static function dropStrictlyEqualsValues(array &$array, ...$vals): void
+    {
+        self::dropValues($array, true, ...$vals);
     }
 
     /**
@@ -639,7 +737,8 @@ final class Arrays
      * @param int $mode Flag determining what arguments are sent to callback:
      *  - ARRAY_FILTER_USE_KEY - pass key as the only argument to callback instead of the value
      *  - ARRAY_FILTER_USE_BOTH - pass both value and key as arguments to callback instead of the value
-     *  Default is 0 which will pass value as the only argument to callback instead.
+     *
+     * Default is 0 which will pass value as the only argument to callback instead.
      * @return array<mixed[]> The removed entries from the array.
      */
     public static function removeWithFilter(array &$array, ?\Closure $filter = null, int $mode = 0): array
@@ -647,6 +746,11 @@ final class Arrays
         $drop = [];
         $ret = [];
 
+
+        if ($filter === null) {
+            $filter = fn ($v) => empty($v);
+            $mode = 0;
+        }
         if ($mode === 0)
             $fmakeParams = fn ($k, $v) => [$v];
         elseif ($mode === ARRAY_FILTER_USE_KEY)

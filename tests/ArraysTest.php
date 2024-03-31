@@ -4,14 +4,13 @@ declare(strict_types=1);
 
 namespace Time2Split\Help\Tests;
 
+use PHPUnit\Framework\Assert;
 use PHPUnit\Framework\TestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
 use stdClass;
 use Time2Split\Help\Arrays;
 use Time2Split\Help\Iterables;
 use Time2Split\Help\Tests\DataProvider\Provided;
-
-use function \iterator_to_array as toArray;
 
 final class ArraysTest extends TestCase
 {
@@ -328,4 +327,125 @@ final class ArraysTest extends TestCase
     // ========================================================================
     // UPDATE
     // ========================================================================
+
+    public static function _testDeleteKey(): iterable
+    {
+        $provided = [
+            new Provided('removeEntry', [function (array &$a, mixed $k): void {
+                $v = $a[$k] ?? null;
+                $e = Arrays::removeEntry($a, $k);
+                Assert::assertSame($v, $e);
+            }]),
+            new Provided('filter:useKey', [function (array &$a, mixed $k): void {
+                Arrays::removeWithFilter($a, fn ($kk) => $kk === $k, ARRAY_FILTER_USE_KEY);
+            }]),
+            new Provided('filter:useBoth', [function (array &$a, mixed $k): void {
+                Arrays::removeWithFilter($a, fn ($v, $kk) => $kk === $k, ARRAY_FILTER_USE_BOTH);
+            }]),
+        ];
+        return Provided::merge($provided);
+    }
+
+    #[DataProvider("_testDeleteKey")]
+    public function testDeleteKey(\Closure $delete): void
+    {
+        $array = self::array_abc;
+        $delete($array, 'a');
+        $this->assertTrue(!isset($array['a']));
+        $expect = $array;
+        $delete($array, 'x');
+        $this->assertSame($expect, $array);
+    }
+
+    // ========================================================================
+
+    public static function _testDeleteValue(): iterable
+    {
+        $provided = [
+            new Provided('dropValues', [function (array &$a, ...$values): void {
+                Arrays::dropValues($a, false, ...$values);
+            }]),
+            new Provided('dropStrictValues', [function (array &$a, ...$values): void {
+                Arrays::dropValues($a, true, ...$values);
+            }]),
+            new Provided('filter', [function (array &$a, ...$values): void {
+                Arrays::removeWithFilter($a, fn ($v) => \in_array($v, $values));
+            }]),
+            new Provided('filterBoth', [function (array &$a, ...$values): void {
+                Arrays::removeWithFilter($a, fn ($v, $k) => \in_array($v, $values), ARRAY_FILTER_USE_BOTH);
+            }]),
+        ];
+        $values = [[], [1], [1, 2], [1, 3], [1, 2, 3]];
+        $values = \array_map(fn ($v) => new Provided(\implode(',', $v), [$v]), $values);
+        return Provided::merge($provided, $values);
+    }
+
+    // ========================================================================
+
+    private static function makeUpdate($array, $update)
+    {
+        foreach ($update as $k => $v)
+            $array[$k] = $v;
+        return $array;
+    }
+
+    public static function _testUpdate(): iterable
+    {
+        $provided = [
+            new Provided('array', [fn ($a) => $a]),
+            // new Provided('ArrayObject', [fn ($a) => new \ArrayObject($a)]),
+        ];
+        return Provided::merge($provided);
+    }
+
+    #[DataProvider("_testUpdate")]
+    public function testUpdate($makeArray): void
+    {
+        $array = $makeArray(self::array_abc);
+        $update = ['a' => 11, 'd' => 4];
+        $expect = self::makeUpdate($array, $update);
+
+        Arrays::update($array, $update);
+        $this->assertSame($expect, $array);
+
+        $array = $makeArray(self::array_abc);
+        $e = $expect;
+        unset($e['d']);
+        Arrays::updateIfPresent($array, $update);
+        $this->assertSame($e, $array);
+
+        $array = $makeArray(self::array_abc);
+        $e = $expect;
+        $e['a'] = 1;
+        Arrays::updateIfAbsent($array, $update);
+        $this->assertSame($e, $array);
+    }
+
+    public static function _testUpdateException()
+    {
+        $provided = [
+            new Provided('update/unexists', [
+                function () {
+                    $a = [];
+                    $u = ['a' => 1];
+                    Arrays::updateWithClosures($a, $u);
+                }, \Exception::class
+            ]),
+            new Provided('update/exists', [
+                function () {
+                    $a = ['a' => 0];
+                    $u = ['a' => 1];
+                    Arrays::updateWithClosures($a, $u);
+                }, \Exception::class
+            ]),
+        ];
+        return Provided::merge($provided);
+    }
+
+    #[DataProvider('_testUpdateException')]
+    public function testUpdateException($test, $expect): void
+    {
+        $this->expectException($expect);
+        $test();
+    }
 }
