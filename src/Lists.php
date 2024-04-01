@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Time2Split\Help;
 
 use Time2Split\Help\Classes\NotInstanciable;
-use TreeArrays;
 
 /**
  * Functions on lists (arrays with integer keys).
@@ -111,17 +110,19 @@ final class Lists
     public static function muteToList(array &$array): void
     {
         if (self::isAlmostList($array))
-            $array =  \array_values($array);
+            $array = \array_values($array);
     }
 
     /**
-     * Reindex every almost list of the array, including the array iteself, to be a list.
+     * Reindex every almost list of the array, including the array itself, to be a list.
+     * 
+     * If the array is not an almost list then it does nothing.
      * 
      * @param array<mixed> &$array A reference to an array.
      */
     public static function muteToListRecursive(array &$array): void
     {
-        TreeArrays::walk_depth($array, function (&$val) {
+        TreeArrays::walkNodes($array, function (&$val) {
             if (\is_array($val))
                 self::muteToList($val);
         });
