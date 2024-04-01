@@ -56,6 +56,10 @@ final class TreeArraysTest extends TestCase
         $p = &TreeArrays::follow($array, ['a', 'ab']);
         $p = 99;
         $this->assertSame(99, $array['a']['ab']);
+
+        TreeArrays::setBranch($array, ['a', 'aa', 'aaa'], 1);
+        $p = &TreeArrays::follow($array, ['a', 'aa', 'aaa']);
+        $this->assertSame(1, $array['a']['aa']['aaa']);
     }
 
     public function testWalk(): void
@@ -121,7 +125,7 @@ final class TreeArraysTest extends TestCase
         $expect = ['a' => ['ab' => 2]];
 
         $array = $base;
-        $r = TreeArrays::removeBranches($array, ['a', 'aa'], ['b']);
+        $r = TreeArrays::removeArrayBranches($array, ['a', 'aa'], ['b']);
         $this->assertSame([
             [['a'], ['aa'], 1],
             [[], ['b'], 2],
@@ -129,7 +133,7 @@ final class TreeArraysTest extends TestCase
         $this->assertSame($expect, $array);
 
         $array = $base;
-        $r = TreeArrays::removeLeaves($array, ['a', 'aa'], ['b']);
+        $r = TreeArrays::removeArrayLeaves($array, ['a', 'aa'], ['b']);
         $this->assertSame([1, 2], $r);
         $this->assertSame($expect, $array);
     }

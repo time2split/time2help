@@ -47,6 +47,27 @@ final class Iterables
     }
 
     /**
+     * Ensures that a value is an \Iterator.
+     *
+     * @template K
+     * @template V
+     * @param iterable<K,V> $iterable An iterable.
+     * @return \Iterator<K,V> Return the iterable $value, else return [$value].
+     */
+    public static function toIterator(iterable $iterable): \Iterator
+    {
+        if (\is_array($iterable))
+            return new \ArrayIterator($iterable);
+        if ($iterable instanceof \Iterator)
+            return $iterable;
+        if ($iterable instanceof \IteratorAggregate)
+            /** @var \Iterator<K,V> */
+            return $iterable->getIterator();
+
+        return new \IteratorIterator($iterable);
+    }
+
+    /**
      * Ensure that an iterable is rewindable.
      *
      * @template K

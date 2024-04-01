@@ -15,6 +15,24 @@ final class TreeArrays
 {
     use NotInstanciable;
 
+    private static function mustRecurse_default(mixed $value): bool
+    {
+        return \is_array($value);
+    }
+
+    private static function hasKey_default(mixed $key, mixed $tree): bool
+    {
+        return \is_array($tree) && \array_key_exists($key, $tree);
+    }
+
+    private static function addNode_default(mixed $key, mixed &$tree): void
+    {
+        if (!\is_array($tree))
+            $tree = [];
+
+        $tree[$key] = [];
+    }
+
     /**
      * Updates a tree.
      * 
@@ -39,7 +57,7 @@ final class TreeArrays
         if (null === $mapKey)
             $mapKey = fn ($k) => $k;
         if (null === $mustRecurse)
-            $mustRecurse = fn ($v) => \is_iterable($v);
+            $mustRecurse = self::mustRecurse_default(...);
 
         $existsp = null;
         $noexistsp = null;
@@ -79,18 +97,42 @@ final class TreeArrays
      * 
      * @param mixed[] &$tree A tree in which set a branch.
      * @param iterable<int,string|int> $path A path to traverse in the array.
+     * @param ?\Closure $hasKey
+     *  - $hasKey($key,$tree):bool
+     * 
+     * Checks whether $tree[$key] exists.
+     * This can only be called once at the first unexistant key encoutered.
+     * 
+     * @param ?\Closure $addNode
+     *  - $addNode($key,&$tree):void
+     * 
+     * Add a new node.
      * @param mixed $value The value to assign to the branch.
      */
-    public static function setBranch(array &$tree, iterable $path, $value = null): void
-    {
+    public static function setBranch(
+        iterable &$tree,
+        iterable $path,
+        $value = null,
+        \Closure $hasKey = null,
+        \Closure $addNode = null,
+    ): void {
+        if (null === $hasKey)
+            $hasKey = self::hasKey_default(...);
+        if (null === $addNode)
+            $addNode = self::addNode_default(...);
+
         $p = &$tree;
+        $path = new \NoRewindIterator(Iterables::toIterator($path));
 
         foreach ($path as $k) {
-
-            if (!\array_key_exists($k, $p))
-                $p[$k] = [];
-
-            $p = &$p[$k];
+            if (!$hasKey($k, $p)) {
+                // End the construction of the branch
+                foreach ($path as $k) {
+                    $addNode($k, $p);
+                    $p = &$p[$k];
+                }
+            } else
+                $p = &$p[$k];
         }
         $p = $value;
     }
@@ -101,14 +143,22 @@ final class TreeArrays
      * @param mixed[] &$tree A reference to a tree.
      * @param iterable<int,string|int> $path The path to follow.
      * @param mixed $default A default value to return if the branch does not exists.
+     * @param ?\Closure $hasKey
+     *  - $hasKey($key,$tree):bool
+     * 
+     * Checks whether $tree[$key] exists.
+     * 
      * @return mixed A reference to the $item reached by following $path, or $default if not existant.
      */
-    public static function &follow(array &$tree, iterable $path, $default = null): mixed
+    public static function &follow(iterable &$tree, iterable $path, $default = null, \Closure $hasKey = null): mixed
     {
+        if (null === $hasKey)
+            $hasKey = self::hasKey_default(...);
+
         $p = &$tree;
 
         foreach ($path as $k) {
-            if (!\is_array($p) || !\array_key_exists($k, $p))
+            if (!$hasKey($k, $p))
                 return $default;
             $p = &$p[$k];
         }
@@ -119,15 +169,23 @@ final class TreeArrays
      * 
      * @param mixed[] &$tree A reference to a tree.
      * @param iterable<int,string|int> $path The path to follow.
+     * @param ?\Closure $hasKey
+     *  - $hasKey($key,$tree):bool
+     * 
+     * Checks whether $tree[$key] exists.
+     * 
      * @return mixed[] An array of references to the nodes of the branch, including the root and the leaf.
      */
-    public static function followNodes(array &$tree, iterable $path): array
+    public static function followNodes(iterable &$tree, iterable $path, \Closure $hasKey = null): array
     {
+        if (null === $hasKey)
+            $hasKey = self::hasKey_default(...);
+
         $p = &$tree;
         $ret = [&$p];
 
         foreach ($path as $k) {
-            if (!\is_array($p) || !\array_key_exists($k, $p))
+            if (!$hasKey($k, $p))
                 return [];
             $p = &$p[$k];
             $ret[] = &$p;
@@ -163,45 +221,57 @@ final class TreeArrays
     /**
      * Counts the number of branches.
      * 
-     * @param mixed[] $tree A tree.
+     * @param iterable<mixed> $tree A tree.
+     * @param ?\Closure $fdown
+     *  - $fdown(array $path, array &$subTree):bool
+     * 
+     * Checks whether the travel must go recursively in the subtree of the branch of path $path.
      * @return int The number of branches.
      */
-    public static function countBranches(array $tree): int
+    public static function countBranches(iterable $tree, \Closure $fdown = null): int
     {
         $nb = 0;
         self::walkBranches($tree, function () use (&$nb): void {
             $nb++;
-        });
+        }, $fdown);
         return $nb;
     }
 
     /**
      * Counts the number of nodes.
      * 
-     * @param mixed[] $tree A tree.
+     * @param iterable<mixed> $tree A tree.
+     * @param ?\Closure $fdown
+     *  - $fdown(array $path, array &$subTree):bool
+     * 
+     * Checks whether the travel must go recursively in the subtree of the branch of path $path.
      * @return int The number of nodes.
      */
-    public static function countNodes(array $tree): int
+    public static function countNodes(iterable $tree, \Closure $fdown = null): int
     {
         $nb = 0;
         self::walkNodes($tree, function () use (&$nb): void {
             $nb++;
-        });
+        }, $fdown);
         return $nb;
     }
 
     /**
      * Gets the maximal depth of the array.
      * 
-     * @param mixed[] $tree An array.
+     * @param iterable<mixed> $tree An array.
+     * @param ?\Closure $fdown
+     *  - $fdown(array $path, array &$subTree):bool
+     * 
+     * Checks whether the travel must go recursively in the subtree of the branch of path $path.
      * @return int The depth of the array.
      */
-    public static function getMaxDepth(array $tree): int
+    public static function getMaxDepth(iterable $tree, \Closure $fdown = null): int
     {
         $nb = 0;
         self::walkBranches($tree, function ($path) use (&$nb): void {
             $nb = \max($nb, \count($path));
-        });
+        }, $fdown);
         return $nb;
     }
 
@@ -211,22 +281,26 @@ final class TreeArrays
     /**
      * Retrieves all the maximal paths of the array.
      * 
-     * @param mixed[] $tree A tree.
+     * @param iterable<mixed> $tree A tree.
+     * @param ?\Closure $fdown
+     *  - $fdown(array $path, array &$subTree):bool
+     * 
+     * Checks whether the travel must go recursively in the subtree of the branch of path $path.
      * @return array<int,array<int,int|string>> An array of paths.
      */
-    public static function branches(array $tree): array
+    public static function branches(iterable $tree, \Closure $fdown = null): array
     {
         $ret = [];
         self::walkBranches($tree, function ($path) use (&$ret) {
             $ret[] = $path;
-        });
+        }, $fdown);
         return $ret;
     }
 
     /**
      * Walks through all tree branches.
      * 
-     * @param mixed[] &$tree A tree to walk through.
+     * @param iterable<mixed> &$tree A tree to walk through.
      * @param ?\Closure $walk
      *  - $walk(array $path, &$value):void
      * 
@@ -238,8 +312,11 @@ final class TreeArrays
      * Checks whether the travel must go recursively in the subtree of the branch of path $path.
      * 
      */
-    public static function walkBranches(array &$tree, ?\Closure $walk = null, ?\Closure $fdown = null): void
-    {
+    public static function walkBranches(
+        iterable &$tree,
+        ?\Closure $walk = null,
+        ?\Closure $fdown = null
+    ): void {
         $toProcess = [
             [
                 [],
@@ -249,7 +326,7 @@ final class TreeArrays
         if (null === $walk)
             $walk = fn () => true;
         if (null === $fdown)
-            $fdown = fn () => true;
+            $fdown = fn ($path, $val) => \is_iterable($val);
 
         while (!empty($toProcess)) {
             $nextToProcess = [];
@@ -261,16 +338,12 @@ final class TreeArrays
                 foreach ($tree as $k => &$val) {
                     $path[] = $k;
 
-                    if (\is_array($val) && !empty($val)) {
-
-                        if ($fdown($path, $val))
-                            $nextToProcess[] = [
-                                $path,
-                                &$val
-                            ];
-                        else
-                            $walk($path, $val);
-                    } else
+                    if ($fdown($path, $val))
+                        $nextToProcess[] = [
+                            $path,
+                            &$val
+                        ];
+                    else
                         $walk($path, $val);
 
                     \array_pop($path);
@@ -290,9 +363,19 @@ final class TreeArrays
      *  - $walk(&$node):void
      * 
      * Do something with a node.
+     * 
+     * @param \Closure $mustRecurse
+     *  - $mapKey($value):bool
+     * 
+     * Check wether a value must be recursively traversed.
      */
-    public static function walkNodes(array &$tree, \Closure $walk): void
-    {
+    public static function walkNodes(
+        iterable &$tree,
+        \Closure $walk,
+        \Closure $mustRecurse = null
+    ): void {
+        if (null === $mustRecurse)
+            $mustRecurse = self::mustRecurse_default(...);
         $toProcess = [&$tree];
 
         while (!empty($toProcess)) {
@@ -301,7 +384,7 @@ final class TreeArrays
             foreach ($toProcess as &$item) {
                 $walk($item);
 
-                if (\is_array($item))
+                if ($mustRecurse($item))
                     foreach ($item as &$val)
                         $nextToProcess[] = &$val;
             }
@@ -313,7 +396,7 @@ final class TreeArrays
     // DELETE
 
     /**
-     * Removes multiple branches from a tree.
+     * Removes multiple branches from an array tree.
      * 
      * @param mixed[] &$tree A tree.
      * @param iterable<int,int|string> ...$paths Paths to the branches to remove.
@@ -323,7 +406,7 @@ final class TreeArrays
      * 
      * @see TreeArrays::removeBranch()
      */
-    public static function removeBranches(array &$tree, iterable ...$paths): array
+    public static function removeArrayBranches(array &$tree, iterable ...$paths): array
     {
         $ret = [];
         foreach ($paths as $k => $path)
@@ -341,10 +424,10 @@ final class TreeArrays
      *  - $removed is the part of the branch that was removed
      *  - $value is the leaf value of the branch
      */
-    public static function removeBranch(array &$tree, iterable $path): array
+    public static function removeBranch(iterable &$tree, iterable $path, \Closure $fdown = null): array
     {
         $path = \iterator_to_array($path);
-        $index = self::followNodes($tree, $path);
+        $index = self::followNodes($tree, $path, $fdown);
 
         if (empty($index))
             return [];
@@ -368,7 +451,7 @@ final class TreeArrays
     }
 
     /**
-     * Removes a branch from a tree.
+     * Removes some leaves from an array tree.
      * 
      * @param mixed[] &$tree A tree.
      * @param iterable<int,int|string> ...$paths The paths to the leaves to remove.
@@ -376,7 +459,7 @@ final class TreeArrays
      *  - $k is the key of the path entry ($k => $path) of the $paths iterable
      *  - $v is the return of self::removeLeaf($array, $path)
      */
-    public static function removeLeaves(array &$tree, iterable ...$paths): array
+    public static function removeArrayLeaves(array &$tree, iterable ...$paths): array
     {
         $ret = [];
         foreach ($paths as $k => $path)
@@ -391,10 +474,10 @@ final class TreeArrays
      * @param iterable<int,int|string> $path The path to the leaf to remove.
      * @return mixed The removed value.
      */
-    public static function removeLeaf(array &$tree, iterable $path): mixed
+    public static function removeLeaf(iterable &$tree, iterable $path, \Closure $fdown = null): mixed
     {
         $path = \iterator_to_array($path);
-        $index = self::followNodes($tree, $path);
+        $index = self::followNodes($tree, $path, $fdown);
 
         if (empty($index))
             return [];
