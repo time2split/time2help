@@ -15,22 +15,43 @@ final class TreeArrays
 {
     use NotInstanciable;
 
-    private static function mustRecurse_default(mixed $value): bool
+    /**
+     * Implementation for the $mustRecurse closure parameters to traverse
+     * an array tree. 
+     */
+    public static function mustRecurseForArray(mixed $value): bool
     {
         return \is_array($value);
     }
 
-    private static function hasKey_default(mixed $key, mixed $tree): bool
+    /**
+     * Implementation for the $hasKey closure parameters using to traverse
+     * an array tree. 
+     */
+    public static function hasKeyForArray(mixed $key, mixed $tree): bool
     {
         return \is_array($tree) && \array_key_exists($key, $tree);
     }
 
-    private static function addNode_default(mixed $key, mixed &$tree): void
+    /**
+     * Implementation for the $addNode closure parameters using to update
+     * an array tree. 
+     */
+    public static function addNodeForArray(mixed $key, mixed &$tree): void
     {
         if (!\is_array($tree))
             $tree = [];
 
         $tree[$key] = [];
+    }
+
+    /**
+     * Implementation for the $setLeaf closure parameters using to update
+     * an array tree. 
+     */
+    public static function setLeafForArray(mixed $value, mixed &$leaf): void
+    {
+        $leaf = $value;
     }
 
     /**
@@ -57,7 +78,7 @@ final class TreeArrays
         if (null === $mapKey)
             $mapKey = fn ($k) => $k;
         if (null === $mustRecurse)
-            $mustRecurse = self::mustRecurse_default(...);
+            $mustRecurse = self::mustRecurseForArray(...);
 
         $existsp = null;
         $noexistsp = null;
@@ -107,6 +128,11 @@ final class TreeArrays
      *  - $addNode($key,&$tree):void
      * 
      * Add a new node.
+     * 
+     * @param ?\Closure $setLeaf
+     *  - $setLeaf($value,&$leaf):void
+     * 
+     * Assign a value to the leaf.
      * @param mixed $value The value to assign to the branch.
      */
     public static function setBranch(
@@ -115,11 +141,14 @@ final class TreeArrays
         $value = null,
         \Closure $hasKey = null,
         \Closure $addNode = null,
+        \Closure $setLeaf = null,
     ): void {
         if (null === $hasKey)
-            $hasKey = self::hasKey_default(...);
+            $hasKey = self::hasKeyForArray(...);
         if (null === $addNode)
-            $addNode = self::addNode_default(...);
+            $addNode = self::addNodeForArray(...);
+        if (null === $setLeaf)
+            $setLeaf = self::setLeafForArray(...);
 
         $p = &$tree;
         $path = new \NoRewindIterator(Iterables::toIterator($path));
@@ -134,7 +163,7 @@ final class TreeArrays
             } else
                 $p = &$p[$k];
         }
-        $p = $value;
+        $setLeaf($value, $p);
     }
 
     /**
@@ -153,7 +182,7 @@ final class TreeArrays
     public static function &follow(iterable &$tree, iterable $path, $default = null, \Closure $hasKey = null): mixed
     {
         if (null === $hasKey)
-            $hasKey = self::hasKey_default(...);
+            $hasKey = self::hasKeyForArray(...);
 
         $p = &$tree;
 
@@ -179,7 +208,7 @@ final class TreeArrays
     public static function followNodes(iterable &$tree, iterable $path, \Closure $hasKey = null): array
     {
         if (null === $hasKey)
-            $hasKey = self::hasKey_default(...);
+            $hasKey = self::hasKeyForArray(...);
 
         $p = &$tree;
         $ret = [&$p];
@@ -375,7 +404,7 @@ final class TreeArrays
         \Closure $mustRecurse = null
     ): void {
         if (null === $mustRecurse)
-            $mustRecurse = self::mustRecurse_default(...);
+            $mustRecurse = self::mustRecurseForArray(...);
         $toProcess = [&$tree];
 
         while (!empty($toProcess)) {
@@ -399,8 +428,8 @@ final class TreeArrays
      * Removes multiple branches from an array tree.
      * 
      * @param mixed[] &$tree A tree.
-     * @param iterable<int,int|string> ...$paths Paths to the branches to remove.
-     * @return array<int,mixed> Array of entries ($k => $v) where
+     * @param iterable<int|string> ...$paths Paths to the branches to remove.
+     * @return array<mixed> Array of entries ($k => $v) where
      *  - $k is the key of the path entry ($k => $path) of the $paths iterable
      *  - $v is the return of self::removeBranch($array, $path)
      * 
