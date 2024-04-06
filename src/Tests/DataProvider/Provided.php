@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace Time2Split\Help\Tests\DataProvider;
 
-use Time2Split\Help\Arrays;
+use Time2Split\Help\Iterables;
 
 /**
  * Provide data for unit test.
  * 
- * This class was implemented to simplify the definition of DataProvider methods in PHPUnit.
+ * This class was firstly implemented to simplify the definition of DataProvider methods in PHPUnit.
  * The use case is to define multiple arrays of Provided and proceed to a cartesian product 
- * with the {@link Provided::merge()} function to obtain the datasets for a test method.
+ * with the {@see Provided::merge()} function to obtain the datasets for a test method.
  * 
  * @package time2help\tests
  * @author Olivier Rodriguez (zuri)
@@ -42,7 +42,7 @@ final class Provided
     public static function merge(array ...$provided): iterable
     {
         return (function () use ($provided) {
-            $prod = Arrays::cartesianProductMerger(...$provided);
+            $prod = Iterables::cartesianProductMerger(...$provided);
 
             foreach ($prod as $line) {
                 $header = \implode('/', \array_map(fn (self $p) => $p->header, $line));

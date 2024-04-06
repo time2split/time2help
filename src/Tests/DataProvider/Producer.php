@@ -1,12 +1,14 @@
 <?php
-declare(strict_types = 1);
+
+declare(strict_types=1);
+
 namespace Time2Split\Help\Tests\DataProvider;
 
 /**
  * Produce an element in a Provided.
  * 
- * A producer instance is only intended to be used as an element of {@see Provided::$data}.
- * It permits to generate an element when encoutered in {@see Provided::merge()}. 
+ * A producer instance is intended to be used as an element of {@see Provided::$data}.
+ * It permits to dynamically generate an element when encoutered in a {@see Provided::merge()} iterator. 
  * 
  * @package time2help\tests
  * @author Olivier Rodriguez (zuri)
@@ -15,15 +17,17 @@ final class Producer
 {
 
     /**
-     * Create a new producer.
+     * Creates a new producer.
      *
      * @param \Closure $get The closure to produce a new element.
+     *  - $get():mixed
      */
     public function __construct(private readonly \Closure $get) //
-    {}
+    {
+    }
 
     /**
-     * Produce an element using the closure.
+     * Produces an element using the closure.
      *
      * @return mixed The produced element.
      */

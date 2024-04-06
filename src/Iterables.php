@@ -21,13 +21,13 @@ final class Iterables
      * Ensures that a value is iterable like a list (ordered int keys).
      *
      * @param mixed $value A value.
-     * @return array<int,mixed> Transforms any iterable<V> $value to an iterable<int,V> one,
+     * @return iterable<int,mixed> Transforms any iterable<V> $value to an iterable<int,V> one,
      *  else return [$value].
      */
-    public static function ensureList($value): array
+    public static function ensureList($value): iterable
     {
         if (\is_array($value))
-            return Lists::ensureList($value);
+            return ArrayLists::ensureList($value);
         if ($value instanceof Traversable)
             self::values($value);
         return [$value];
@@ -465,7 +465,109 @@ final class Iterables
             }
         }
     }
+
     // ========================================================================
+
+    /**
+     * Finds entries from an iterable that are not in relation with any entry from another iterable.
+     *
+     * @template K
+     * @template V
+     * 
+     * @param \Closure $searchRelations
+     *  Finds whether an entry ($akey => $aval) of $a has a relation with an entry of $b.
+     *  If there is a relation then the callback must return the keys of $b in relation with $aval,
+     *  else it must return false.
+     *  - searchRelations(K $akey, V $aval, iterable &$b):array<K>|K
+     * @param iterable<K,V> $a The iterable to associate from.
+     * @param iterable<mixed> $b The iterable to associate to.
+     * @return \Iterator<K,V> Returns an \Iterator of ($k => $v) entries from $a without any relation with an entry of $b.
+     */
+    public static function findEntriesWithoutRelation(\Closure $searchRelations, iterable $a, iterable $b): \Iterator
+    {
+        foreach ($a as $k => $v) {
+            if (false === $searchRelations($k, $v, $b))
+                yield $k => $v;
+        }
+    }
+
+    /**
+     * Finds all relations between each entry from an iterable to entries from another iterable.
+     *
+     * @template K
+     * @template V
+     * 
+     * @param \Closure $searchRelations
+     *  Finds whether an entry ($akey => $aval) of $a has a relation with an entry of $b.
+     *  If there is a relation then the callback must return the keys of $b in relation with $aval,
+     *  else it must return false.
+     *  - searchRelations(K $akey, V $aval, iterable &$b):array<K>|K
+     * @param iterable<K,V> $a The iterable to associate from.
+     * @param array<mixed> $b The iterable to associate to.
+     * @return \Iterator<K,string|int> Returns an \Iterator of ($ka => $kb) entries
+     *  where $ka is from ($ka => $va) an entry of $a in relation
+     *  and $kb is from ($kb => $vb) an entry of $b.
+     */
+    public static function findEntriesRelations(\Closure $searchRelations, iterable $a, iterable $b): \Iterator
+    {
+        foreach ($a as $k => $v) {
+            $bkeys = $searchRelations($k, $v, $b);
+            if (false === $bkeys)
+                continue;
+            foreach (Iterables::ensureIterable($bkeys) as $bk)
+                yield $k => $bk;
+        }
+    }
+
+    // ========================================================================
+
+    /**
+     * Check that an iterable has the same values as another (order independent).
+     *
+     * @param iterable<mixed> $a An iterable.
+     * @param iterable<mixed> $b An iterable.
+     * @param bool $strict If the comparison must be strict (===) or not (==).
+     */
+    public static function valuesEquals(iterable $a, iterable $b, bool $strict = false): bool
+    {
+        if (
+            (\is_array($a) || $a instanceof \Countable)
+            && (\is_array($b) || $b instanceof \Countable)
+            && \count($a) !== \count($b)
+        )
+            return false;
+
+        return !self::valuesInjectionDiff($a, $b, $strict)->valid();
+    }
+
+    /**
+     * Finds the values of $a that are not in $b.
+     *
+     * Each value of $b can at most be tagged once to be a value of $a.
+     * For instance if $a=['a', 'a'] and $b=['a']
+     * then the difference return ['a'] because the second 'a' of $a
+     * cannot be compared to the same 'a' as the previous comparison.
+     * 
+     * @param iterable<mixed> $a An iterable.
+     * @param iterable<mixed> $b An iterable.
+     * @param bool $strict If the comparison must be strict (===) or not (==).
+     */
+    public static function valuesInjectionDiff(iterable $a, iterable $b, bool $strict = false): \Iterator
+    {
+        $b = \iterator_to_array($b);
+        return self::findEntriesWithoutRelation(
+            function (string|int $akey, mixed $aval, array &$b) use ($strict) {
+                $key =  \array_search($aval, $b, $strict);
+                unset($b[$key]);
+                return $key;
+            },
+            $a,
+            $b
+        );
+    }
+
+    // ========================================================================
+
     private static function sequenceSizeIsLowerThan_mayBeStrict(bool $strict): \Closure
     {
         return $strict ? self::sequenceSizeIsStrictlyLowerThan(...) : self::sequenceSizeIsLowerOrEqual(...);
@@ -537,7 +639,7 @@ final class Iterables
     /**
      * Check if two sequences are in an equal relation according to external keys and values comparison closures.
      *
-     * Two sequences are in an equal relation if they have the same key => value entries in the same order.
+     * Two sequences are in an equal relation if they have the same (key => value) entries in the same order.
      *
      * @param iterable<mixed,mixed> $a A sequence of entries.
      * @param iterable<mixed,mixed> $b A sequence of entries.
@@ -660,18 +762,20 @@ final class Iterables
     /**
      * Cartesian product between iterables calling a closure to make a result entry.
      *
-     *  Note that a cartesian product has no result if an iterable is empty.
+     * Note that a cartesian product has no result if an iterable is empty.
      * 
      * @template K
      * @template V
      * 
      * @param \Closure $makeEntry
-     *  - $makeEntry(K $k, V $v):R <br>
-     *  The closure must return a R value representing a selected iterable entry ($k => $v).
+     *  The closure to make a result entry.
+     *  It must return a R value representing a selected iterable entry ($k => $v).
+     *  - $makeEntry(K $k, V $v):R
      * @param iterable<K,V> ...$arrays
      *            A sequence of iterable.
-     * @return \Iterator<int,array<int, mixed>> An iterator of array of $makeEntry(key, value):
-     *  [ $makeEntry(k_1, v_1), ... ,$makeEntry($k_i, $v_i) ]
+     * @return \Iterator<int,array<int, mixed>> An iterator of array of $makeEntry($k_i, $v_i):
+     *  - [ $makeEntry(k_1, v_1), ... ,$makeEntry($k_i, $v_i) ]
+     * 
      *  where ($k_i => $v_i) is an entry from the i^th iterator.
      */
     public static function cartesianProductMakeEntries(\Closure $makeEntry, iterable ...$arrays): \Iterator
@@ -711,25 +815,88 @@ final class Iterables
             }
         }
     }
+
+    // ========================================================================
+
     /**
-     * Cartesian product between iterables where a selected entry is returned as an array of two values:
-     * [key, value].
+     * Cartesian product between iterables;
+     * each selected entry ($k_i => $v_i) of an iterable
+     * is returned as an array [$k_i => $v_i].
      *
-     * @template K
-     * @template V
+     * Note that a cartesian product has no result if an iterable is empty.
      * 
-     * @param iterable<K,V> ...$arrays
+     * @template V
+     * @param iterable<V> ...$arrays
      *            A sequence of iterable.
-     * @return \Iterator<int,array<int,array<int,K|V>>>
-     *  An iterator of array of  [key, value] pairs:
-     *  [ [k_1, v_1], ... , [$k_i, $v_i] ]
+     * @return \Iterator<int,array<int, V[]>>
+     *  An iterator of array of  [$k_i => $v_i] pairs:
+     *  - [ [k_1 => v_1], ... , [$k_i => $v_i] ]
+     * 
      *  where ($k_i => $v_i) is an entry from the i^th iterator.
-     *  Note that a cartesian product has no result if an iterable is empty.
      */
     public static function cartesianProduct(iterable ...$arrays): \Iterator
     {
-        /** @var \Iterator<int,array<int,array<int,K|V>>> */
-        return self::cartesianProductMakeEntries(fn ($k, $v) => [$k, $v], ...$arrays);
+        /** @var \Iterator<int,array<int,V[]>> */
+        return Iterables::cartesianProductMakeEntries(fn ($k, $v) => [$k => $v], ...$arrays);
+    }
+
+    /**
+     * Cartesian product between iterables;
+     * each selected entry ($k_i => $v_i) of an iterable
+     * is returned as an array pair [$k_i, $v_i] in the result.
+     *
+     *  Note that a cartesian product has no result if an iterable is empty.
+     * 
+     * @template V
+     * @param iterable<V> ...$arrays
+     *            A sequence of iterable.
+     * @return \Iterator<int,array<int,array<int,mixed>>>
+     *  An iterator of array of  [$k_i, $v_i] pairs:
+     *  - [ [k_1, v_1], ... , [$k_i, $v_i] ]
+     * 
+     *  where ($k_i => $v_i) is an entry from the i^th iterator.
+     */
+    public static function cartesianProductPairs(iterable ...$arrays): \Iterator
+    {
+        /** @var \Iterator<int,array<int,array<int,mixed>>> */
+        return Iterables::cartesianProductMakeEntries(fn ($k, $v) => [$k, $v], ...$arrays);
+    }
+
+    /**
+     * Cartesian product between iterables;
+     * all selected entries ($k_i => $v_i) of the iterables
+     * are merged into a single array in the result.
+     *
+     *  Note that a cartesian product has no result if an iterable is empty.
+     * 
+     * @template V
+     * @param iterable<V> ...$arrays
+     *            A sequence of iterable.
+     * @return \Iterator<int,V[]>
+     *  An iterator of array:
+     * - [k_1 => v_1, ... , $k_i => $v_i]
+     * 
+     *  where ($k_i => $v_i) is an entry from the i^th iterator.
+     */
+    public static function cartesianProductMerger(iterable ...$arrays): \Iterator
+    {
+        return self::mergeCartesianProduct(
+            self::cartesianProduct(...$arrays)
+        );
+    }
+
+    /**
+     * Transform each result of a cartesianProduct() iterator into a simple array of all its pair entries.
+     *
+     * @template V
+     * @param \Iterator<int,array<V[]>> $cartesianProduct
+     *            The iterator of a cartesian product.
+     * @return \Iterator<V[]> An Iterator of flat array which correspond to the merging of all its pairs [$k_i => $v_i].
+     */
+    private static function mergeCartesianProduct(\Iterator $cartesianProduct): \Iterator
+    {
+        foreach ($cartesianProduct as $result)
+            yield \array_merge(...$result);
     }
 
     // ========================================================================

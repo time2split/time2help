@@ -242,189 +242,6 @@ final class Arrays
     // ========================================================================
 
     /**
-     * Check that an array has the same entries as another in any order.
-     *
-     * @param mixed[] $a
-     *            An array.
-     * @param mixed[] $b
-     *            An array.
-     * @param bool $strict
-     *            Use the strict comparison as relation (===) or the equals one (==).
-     */
-    public static function sameEntries(iterable $a, array $b, bool $strict = false): bool
-    {
-        if (
-            \is_array($a) && \is_array($b)
-            && \count($a) !== \count($b)
-        )
-            return false;
-
-        return !self::diffEntries($a, $b, $strict)->valid();
-    }
-    /**
-     * Finds the entries of $a that are not in $b.
-     *
-     * @param mixed[] $a
-     *            An array.
-     * @param mixed[] $b
-     *            An array.
-     * @param bool $strict
-     *            Use the strict comparison as relation (===) or the equals one (==).
-     */
-    public static function diffEntries(iterable $a, array $b, bool $strict = false): \Iterator
-    {
-        return self::searchEntriesWithoutRelation(
-            fn (string|int $akey, mixed $aval, array $b) => \array_search($aval, $b, $strict),
-            $a,
-            $b
-        );
-    }
-
-    // ========================================================================
-
-    /**
-     * Finds entries of an iterable that are not in relation with any entry of an array.
-     *
-     * @template K
-     * @template V
-     * 
-     * @param \Closure $searchRelation
-     *  - searchRelation(K $akey, V $aval, array $b):array<K>|K
-     * 
-     *  Finds whether an entry ($akey => $aval) of $a has a relation with an entry of $b.
-     *  If there is a relation then the callback must return the keys of $b in relation with $aval,
-     *  else it must return false.
-     * @param Iterable<K,V> $a
-     *            The iterable to associate from.
-     * @param mixed[] $b
-     *            An array to check the relations with the first array.
-     * @return \Iterator<K,V> Returns an \Iterator of ($k => $v) entries from $a without relation with an entry of $b.
-     */
-    public static function searchEntriesWithoutRelation(\Closure $searchRelation, iterable $a, array $b): \Iterator
-    {
-        foreach ($a as $k => $v) {
-            $bkeys = $searchRelation($k, $v, $b);
-
-            if (false === $bkeys)
-                yield $k => $v;
-            else
-                foreach (Iterables::ensureIterable($bkeys) as $bk)
-                    unset($b[$bk]);
-        }
-    }
-
-    /**
-     * Finds values of an iterable that are in relation with any other value of an array.
-     *
-     * @template K
-     * @template V
-     * 
-     * @param \Closure $searchRelation
-     *  - searchRelation(K $akey, V $aval, array $b):array<K>|K<br>
-     * 
-     *  Finds whether an entry ($akey => $aval) of $a has a relation with an entry of $b.
-     *  If there is a relation then the callback must return the keys of $b in relation with $aval,
-     *  else it must return false.
-     * @param iterable<K,V> $a
-     *            The iterable to associate from.
-     * @param mixed[] $b
-     *            The array to associate to.
-     * @return \Iterator<K,string|int> Returns an \Iterator of $ka => $kb entries where $ka => $va is an entry of $a in relation with $kb => $vb an entry of $b.
-     */
-    public static function searchEntriesWithRelation(\Closure $searchRelation, iterable $a, array $b): \Iterator
-    {
-        foreach ($a as $k => $v) {
-            $bkeys = $searchRelation($k, $v, $b);
-
-            if (false !== $bkeys) {
-                foreach (Iterables::ensureIterable($bkeys) as $bk) {
-                    unset($b[$bk]);
-                    yield $k => $bk;
-                }
-            }
-        }
-    }
-
-    // ========================================================================
-
-    /**
-     * Cartesian product between iterables where the selected entry ($k_i => $v_i) of each iterable
-     * is returned as an array [$k_i => $v_i].
-     *
-     * Note that a cartesian product has no result if an iterable is empty.
-     * 
-     * @template V
-     * @param iterable<V> ...$arrays
-     *            A sequence of iterable.
-     * @return \Iterator<int,array<int, V[]>> An iterator of array of  [key => value] pairs:
-     *  - [ [k_1 => v_1], ... , [$k_i => $v_i] ]
-     *  where ($k_i => $v_i) is an entry from the i^th iterator.
-     * 
-     */
-    public static function cartesianProduct(iterable ...$arrays): \Iterator
-    {
-        /** @var \Iterator<int,array<int,V[]>> */
-        return Iterables::cartesianProductMakeEntries(fn ($k, $v) => [$k => $v], ...$arrays);
-    }
-
-    /**
-     * Cartesian product between iterables where the selected entry ($k_i => $v_i) of each iterable
-     * is returned as a pair [$k_i, $v_i].
-     *
-     *  Note that a cartesian product has no result if an iterable is empty.
-     * 
-     * @template V
-     * @param iterable<V> ...$arrays
-     *            A sequence of iterable.
-     * @return \Iterator<int,array<int,array<int,mixed>>>
-     *  An iterator of array of  [key, value] pairs:
-     *  - [ [k_1, v_1], ... , [$k_i, $v_i] ]
-     *  where ($k_i => $v_i) is an entry from the i^th iterator.
-     */
-    public static function cartesianProductPairs(iterable ...$arrays): \Iterator
-    {
-        return Iterables::cartesianProduct(...$arrays);
-    }
-
-
-    /**
-     * Cartesian product between iterables the selected entries ($k_i => $v_i) of each iterable
-     * are merged in a single array.
-     *
-     *  Note that a cartesian product has no result if an iterable is empty.
-     * 
-     * @template V
-     * @param iterable<V> ...$arrays
-     *            A sequence of iterable.
-     * @return \Iterator<int,V[]>
-     *  An iterator of array:
-     * - [k_1 => v_1, ... , $k_i => $v_i]
-     *  where ($k_i => $v_i) is an entry from the i^th iterator.
-     */
-    public static function cartesianProductMerger(iterable ...$arrays): \Iterator
-    {
-        return self::mergeCartesianProduct(
-            self::cartesianProduct(...$arrays)
-        );
-    }
-
-    /**
-     * Transform each result of a cartesianProduct() iterator into a simple array of all its pair entries.
-     *
-     * @template V
-     * @param \Iterator<int,array<V[]>> $cartesianProduct
-     *            The iterator of a cartesian product.
-     * @return \Iterator<V[]> An Iterator of flat array which correspond to the merging of all its pairs [$k_i => $v_i].
-     */
-    private static function mergeCartesianProduct(\Iterator $cartesianProduct): \Iterator
-    {
-        foreach ($cartesianProduct as $result)
-            yield \array_merge(...$result);
-    }
-
-    // ========================================================================
-
-    /**
      * Select a part of an array.
      * 
      * @template V
@@ -435,35 +252,13 @@ final class Arrays
      * @return (D|V)[] The entries ($k => $v) of $array which their key $k is in $keys,
      *  or ($k => $default) if $k is not a key of $array.
      */
-    public static function select(array $array, array $keys, $default = null): array
+    public static function arraySelect(array $array, array $keys, $default = null): array
     {
         $ret = [];
 
         foreach ($keys as $k)
             $ret[$k] = $array[$k] ?? $default;
 
-        return $ret;
-    }
-
-    /**
-     * Replaces each int key by its value, and assign a new value to it.
-     *
-     * @param mixed[] $array An array
-     * @param mixed $value
-     *            The value to associate to each new entry (ie: $lastValue => $value).
-     * @return mixed[]
-     */
-    public static function replaceIntKeyByItsValue(array $array, $value = null): array
-    {
-        $ret = [];
-
-        foreach ($array as $k => $v) {
-
-            if (\is_int($k))
-                $ret[$v] = $value;
-            else
-                $ret[$k] = $v;
-        }
         return $ret;
     }
 
@@ -476,12 +271,12 @@ final class Arrays
      * @param mixed[] $array An array to run through the callback function.
      * @param mixed[] ...$arrays
      *  Supplementary variable list of array arguments to run through the callback function.
-     * @return mixed[] \array_merge(...\array_map($callback, $array))
+     * @return mixed[] \array_merge(...\array_map($callback, $array, ...$arrays))
      * 
      * @see https://www.php.net/manual/en/function.array-map.php
      * @see https://www.php.net/manual/en/function.array-merge.php
      */
-    public static function mapMerge(\Closure $callback, array $array, array ...$arrays): array
+    public static function arrayMapMerge(\Closure $callback, array $array, array ...$arrays): array
     {
         return \array_merge(...\array_map($callback, $array, ...$arrays));
     }
@@ -505,19 +300,19 @@ final class Arrays
      * @see https://www.php.net/manual/en/function.array-map.php
      * @see https://www.php.net/manual/en/function.array-unique.php
      */
-    public static function mapUnique(\Closure $callback, array $array, int $flags = SORT_REGULAR): array
+    public static function arrayMapUnique(\Closure $callback, array $array, int $flags = SORT_REGULAR): array
     {
         return \array_unique(\array_map($callback, $array), $flags);
     }
 
     /**
-     * Apply a callback to the keys of an array.
+     * Applies a callback to the keys of a given array.
      * 
-     * @param ?\Closure $callback A closure to run for each key of the array.
+     * @param \Closure $callback A closure to run for each key of the array.
      * @param mixed[] $array An array.
      * @return mixed[] An array where each entry ($k => $v) has been replaced by ($callback($k) => $v).
      */
-    public static function mapKey(?\Closure $callback, array $array): array
+    public static function arrayMapKey(\Closure $callback, array $array): array
     {
         return \array_combine(\array_map($callback, \array_keys($array)), $array);
     }
@@ -526,7 +321,7 @@ final class Arrays
      * Partitions an array in two according to a filter.
      * 
      * @param mixed[] $array An array.
-     * @param \Closure $filter A filter to apply on each entry.
+     * @param \Closure $filter A filter to apply on each entry of the array.
      *  If no callback is supplied, all empty entries of array will be removed.
      * See empty() for how PHP defines empty in this case.
      * @param int $mode Flag determining what arguments are sent to callback:
@@ -535,9 +330,9 @@ final class Arrays
      *
      * Default is 0 which will pass value as the only argument to callback instead.
      * @return array<mixed[]> A list of two arrays where $list[0] are the entries validated by the filter
-     *  and $list[1] are the remaining entries not filtered of the array.
+     *  and $list[1] are the remaining entries not filtered.
      */
-    public static function partition(array $array, ?\Closure $filter, int $mode = 0): array
+    public static function arrayPartition(array $array, ?\Closure $filter, int $mode = 0): array
     {
         $a = \array_filter($array, $filter, $mode);
         $b = \array_diff_key($array, $a);
@@ -653,7 +448,7 @@ final class Arrays
      *  - $mapKey($key):int|string
      * 
      *  If set then transform each $args entry to ($mapKey($k) => $v).
-     * @return mixed[] The updated entries of $args that didn't exists in $array.
+     * @return mixed[] The updated entries of $args that already exists in $array.
      */
     public static function updateIfAbsent(
         array &$array,
@@ -672,7 +467,7 @@ final class Arrays
     // REMOVE
 
     /**
-     * Deletes an entry from an array and return its value.
+     * Deletes an entry from an array using its key then return its value.
      * 
      * @param mixed[] &$array A reference to an array.
      * @param string|int $key The key of the entry to delete.
@@ -706,23 +501,22 @@ final class Arrays
         }
     }
     /**
-     * Deletes some values from an array using the equals (==) operator.
+     * Deletes some values from an array using the equality operator (==).
      * 
      * @param mixed[] &$array A reference to an array.
      * @param mixed ...$vals Some values to delete.
      */
-    public static function dropEqualsValues(array &$array, ...$vals): void
+    public static function dropEqualValues(array &$array, ...$vals): void
     {
         self::dropValues($array, false, ...$vals);
     }
     /**
-     * 
-     * Deletes some values from an array using the strictly equals (===) operator.
+     * Deletes some values from an array using the identity operator (===).
      * 
      * @param mixed[] &$array A reference to an array.
      * @param mixed ...$vals Some values to delete.
      */
-    public static function dropStrictlyEqualsValues(array &$array, ...$vals): void
+    public static function dropIdenticalValues(array &$array, ...$vals): void
     {
         self::dropValues($array, true, ...$vals);
     }
@@ -739,7 +533,7 @@ final class Arrays
      *  - ARRAY_FILTER_USE_BOTH - pass both value and key as arguments to callback instead of the value
      *
      * Default is 0 which will pass value as the only argument to callback instead.
-     * @return array<mixed[]> The removed entries from the array.
+     * @return mixed[] An array of the removed entries.
      */
     public static function removeWithFilter(array &$array, ?\Closure $filter = null, int $mode = 0): array
     {

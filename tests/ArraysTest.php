@@ -7,7 +7,6 @@ namespace Time2Split\Help\Tests;
 use PHPUnit\Framework\Assert;
 use PHPUnit\Framework\TestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
-use stdClass;
 use Time2Split\Help\Arrays;
 use Time2Split\Help\Iterables;
 use Time2Split\Help\Tests\DataProvider\Provided;
@@ -185,102 +184,13 @@ final class ArraysTest extends TestCase
     #[DataProvider('diffProvider')]
     public function testDiff(bool $strict, array $a, array $b, array $resultab, $resultba): void
     {
-        $diff = \iterator_to_array(Arrays::diffEntries($a, $b, $strict));
-        $this->assertSame($resultab, $diff);
-        $diff = \iterator_to_array(Arrays::diffEntries($b, $a, $strict));
-        $this->assertSame($resultba, $diff);
+        $diff = \iterator_to_array(Iterables::valuesInjectionDiff($a, $b, $strict));
+        $this->assertSame($resultab, $diff, 'ab');
+        $diff = \iterator_to_array(Iterables::valuesInjectionDiff($b, $a, $strict));
+        $this->assertSame($resultba, $diff, 'ba');
 
         $equals = empty($resultab) && empty($resultba);
-        $this->assertSame($equals, Arrays::sameEntries($a, $b, $strict));
-    }
-
-    // ========================================================================
-    private static function range($a, $b, $step = 1): \Closure
-    {
-        return function () use ($a, $b, $step): \Generator {
-            for ($i = $a; $i <= $b; $i += $step)
-                yield $i;
-        };
-    }
-
-    private static function cartesianResult(\Closure ...$generators): \Generator
-    {
-        $count = \count($generators);
-
-        if ($count === 0)
-            return [];
-        elseif ($count === 1) {
-            foreach (\array_shift($generators)() as $k => $v)
-                yield [
-                    [
-                        $k => $v
-                    ]
-                ];
-        } else {
-            foreach (\array_shift($generators)() as $k => $v) {
-                foreach (self::cartesianResult(...$generators) as $subProduct)
-                    yield \array_merge([
-                        [
-                            $k => $v
-                        ]
-                    ], $subProduct);
-            }
-        }
-    }
-
-    public static function cartesianProductProvider(): array
-    {
-        return [
-            '0' => [
-                0
-            ],
-            '1' => [
-                1,
-                self::range(1, 1)
-            ],
-            '2' => [
-                2,
-                self::range(1, 2)
-            ],
-            '2x2' => [
-                4,
-                self::range(1, 2),
-                self::range(10, 11)
-            ],
-            '2x2x2' => [
-                8,
-                self::range(1, 2),
-                self::range(10, 11),
-                self::range(100, 101)
-            ],
-            '2x0x2' => [
-                0,
-                self::range(1, 2),
-                self::range(1, 0),
-                self::range(100, 101)
-            ]
-        ];
-    }
-
-    private function checkCartesianResult(int $count, \Iterator $expected, \Iterator $result): void
-    {
-        $expected = \iterator_to_array($expected);
-        $result = \iterator_to_array($result);
-
-        $ce = \count($expected);
-        $this->assertSame($count, $ce, 'Expected count');
-        $this->assertSame($expected, $result);
-    }
-
-    #[DataProvider('cartesianProductProvider')]
-    public function testCartesianProduct(int $count, \Closure ...$generators): void
-    {
-        $expected = self::cartesianResult(...$generators);
-        $result = Arrays::cartesianProduct(...\array_map(fn ($g) => \iterator_to_array($g()), $generators));
-
-        $expected = Arrays::cartesianProductMerger($expected);
-        $result = Arrays::cartesianProductMerger($result);
-        $this->checkCartesianResult($count, $expected, $result);
+        $this->assertSame($equals, Iterables::valuesEquals($a, $b, $strict));
     }
 
     // ========================================================================
@@ -301,27 +211,15 @@ final class ArraysTest extends TestCase
         for ($i = 0; $i < $nb; $i++) {
             $keys = \array_slice($abckeys, 0, $i);
             $expect = self::testSubSelect_expect(self::array_abc, $keys);
-            $this->assertSame($expect, Arrays::select(self::array_abc, $keys));
+            $this->assertSame($expect, Arrays::arraySelect(self::array_abc, $keys));
 
             if ($i < 2) continue;
             $keys = \array_reverse($keys);
             $expect = self::testSubSelect_expect(self::array_abc, $keys);
-            $this->assertSame($expect, Arrays::select(self::array_abc, $keys));
+            $this->assertSame($expect, Arrays::arraySelect(self::array_abc, $keys));
         }
         $expect = ['a' => 1, 'x' => false];
-        $this->assertSame($expect, Arrays::select(self::array_abc, ['a', 'x'], false));
-    }
-
-    // ========================================================================
-
-
-    public function testListValueAsKey(): void
-    {
-        $default = true;
-        $expect = \array_combine(self::list_abc, \array_fill(0, 3, $default));
-        $this->assertSame($expect, Arrays::replaceIntKeyByItsValue($expect, $default));
-
-        $it = Iterables::flip([new stdClass()]);
+        $this->assertSame($expect, Arrays::arraySelect(self::array_abc, ['a', 'x'], false));
     }
 
     // ========================================================================

@@ -71,7 +71,7 @@ final class IterablesTest extends TestCase
             self::makeIteratorTestMethod('mapValue', \array_combine(\array_keys(self::testIteratorMethodsArray), $mapped), $mapv),
         ];
 
-        $limits = Arrays::cartesianProductMerger([0, 1, 2], [0, 1, 2, 3]);
+        $limits = Iterables::cartesianProductMerger([0, 1, 2], [0, 1, 2, 3]);
 
         foreach ($limits as list($offset, $length)) {
             $expect = \array_slice(self::testIteratorMethodsArray, $offset, $length, true);
@@ -360,6 +360,96 @@ final class IterablesTest extends TestCase
     public function testSequence(bool $expected, callable $test, iterable $a, iterable $b): void
     {
         $this->assertEquals($expected, $test($a, $b));
+    }
+
+    // ========================================================================
+
+    private static function range($a, $b, $step = 1): \Closure
+    {
+        return function () use ($a, $b, $step): \Generator {
+            for ($i = $a; $i <= $b; $i += $step)
+                yield $i;
+        };
+    }
+
+    private static function cartesianResult(\Closure ...$generators): \Generator
+    {
+        $count = \count($generators);
+
+        if ($count === 0)
+            return [];
+        elseif ($count === 1) {
+            foreach (\array_shift($generators)() as $k => $v)
+                yield [
+                    [
+                        $k => $v
+                    ]
+                ];
+        } else {
+            foreach (\array_shift($generators)() as $k => $v) {
+                foreach (self::cartesianResult(...$generators) as $subProduct)
+                    yield \array_merge([
+                        [
+                            $k => $v
+                        ]
+                    ], $subProduct);
+            }
+        }
+    }
+
+    public static function cartesianProductProvider(): array
+    {
+        return [
+            '0' => [
+                0
+            ],
+            '1' => [
+                1,
+                self::range(1, 1)
+            ],
+            '2' => [
+                2,
+                self::range(1, 2)
+            ],
+            '2x2' => [
+                4,
+                self::range(1, 2),
+                self::range(10, 11)
+            ],
+            '2x2x2' => [
+                8,
+                self::range(1, 2),
+                self::range(10, 11),
+                self::range(100, 101)
+            ],
+            '2x0x2' => [
+                0,
+                self::range(1, 2),
+                self::range(1, 0),
+                self::range(100, 101)
+            ]
+        ];
+    }
+
+    private function checkCartesianResult(int $count, \Iterator $expected, \Iterator $result): void
+    {
+        $expected = \iterator_to_array($expected);
+        $result = \iterator_to_array($result);
+
+        $ce = \count($expected);
+        $this->assertSame($count, $ce, 'Expected count');
+        $this->assertSame($expected, $result);
+    }
+
+    #[DataProvider('cartesianProductProvider')]
+    public function testCartesianProduct(int $count, \Closure ...$generators): void
+    {
+        $expected = self::cartesianResult(...$generators);
+        $result = Iterables::cartesianProduct(...\array_map(fn ($g) => \iterator_to_array($g()), $generators));
+
+        $expected = Iterables::cartesianProductMerger($expected);
+        $result = Iterables::cartesianProductMerger($result);
+        $this->checkCartesianResult($count, $expected, $result);
     }
 }
 

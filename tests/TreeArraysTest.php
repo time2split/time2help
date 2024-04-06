@@ -6,7 +6,6 @@ namespace Time2Split\Help\Tests;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
-use Time2Split\Help\Classes\NotInstanciable;
 use Time2Split\Help\Tests\DataProvider\Provided;
 use Time2Split\Help\TreeArrays;
 

@@ -9,10 +9,13 @@ use Time2Split\Help\Classes\NotInstanciable;
 /**
  * Functions on lists (arrays with integer keys).
  * 
+ * A list is an array with ordered integer keys from 0 to count(list)-1.
+ * An array is almost a list when its keys are integers not necessary ordered.
+ * 
  * @package time2help\container
  * @author Olivier Rodriguez (zuri)
  */
-final class Lists
+final class ArrayLists
 {
     use NotInstanciable;
 
@@ -32,9 +35,8 @@ final class Lists
     }
 
     /**
-     * Checks whether a given array is a list.
+     * Whether an array is a list.
      * 
-     * Determines if the given array is a list.
      * An array is considered a list if its keys consist of consecutive numbers from 0 to count($array)-1.
      *
      * @param  mixed[] $array The array being evaluated.
@@ -46,7 +48,7 @@ final class Lists
     }
 
     /**
-     * Finds whether an array is almost a list.
+     * Whether an array is almost a list.
      * 
      * An array is almost a list (or an 'almost list') if its keys are all integers.
      * Note that every list is almost a list.
@@ -61,7 +63,9 @@ final class Lists
     }
 
     /**
-     * Transform an almost list to a list.
+     * Transforms an almost list to a list.
+     * 
+     * The integer keys are reindexed.
      * 
      * @template V
      * @param array<int,V> &$almostList An almost list.
@@ -77,10 +81,11 @@ final class Lists
     }
 
     /**
-     * Transform an almost list to a list.
+     * Transforms an almost list to a list.
      * 
      * @param array<mixed> &$array An almost list.
      * @param \Closure $supplyOnFailure Callback that supply the value to return if $array is not an almost list.
+     *  - $supplyOnFailure():mixed
      * @return mixed A list, or $supplyOnFailure() if $array is not an almost list.
      * @throws \InvalidArgumentException if $array is not an almost list and $supplyOnFailure is not set.
      */
@@ -101,7 +106,7 @@ final class Lists
     // ========================================================================
 
     /**
-     * Change an almost list to be a list.
+     * Changes an almost list to be a list.
      * 
      * If the array is not an almost list then it does nothing.
      * 
@@ -114,9 +119,9 @@ final class Lists
     }
 
     /**
-     * Reindex every almost list of the array, including the array itself, to be a list.
+     * Reindexes every almost list of an array, including the array itself, to be a list.
      * 
-     * If the array is not an almost list then it does nothing.
+     * If an array is not an almost list then it does nothing.
      * 
      * @param array<mixed> &$array A reference to an array.
      */
