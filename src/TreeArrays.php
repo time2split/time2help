@@ -17,27 +17,48 @@ final class TreeArrays
 
     /**
      * Implementation for the $mustRecurse closure parameters to traverse
-     * an array tree. 
+     * an array tree.
+     * 
+     * @param mixed $value A value/node of a tree.
+     * @return bool true if value is an array.
+     * 
+     * @see TreeArrays::update()
+     * @see TreeArrays::walkNodes()
      */
-    public static function mustRecurseForArray(mixed $value): bool
+    public static function closureParamMustRecurseForArray(mixed $value): bool
     {
         return \is_array($value);
     }
 
     /**
-     * Implementation for the $hasKey closure parameters using to traverse
-     * an array tree. 
+     * Implementation for the $hasKey closure parameters to traverse
+     * an array tree.
+     * 
+     * @param mixed $key A possible key of $tree.
+     * @param mixed $tree A possible tree.
+     * @return bool true if $tree is an array and $tree[$key] exists.
+     * 
+     * @see TreeArrays::setBranch()
+     * @see TreeArrays::follow()
+     * @see TreeArrays::followNodes()
      */
-    public static function hasKeyForArray(mixed $key, mixed $tree): bool
+    public static function closureParamHasKeyForArray(mixed $key, mixed $tree): bool
     {
         return \is_array($tree) && \array_key_exists($key, $tree);
     }
 
     /**
-     * Implementation for the $addNode closure parameters using to update
-     * an array tree. 
+     * Implementation for the $addNode closure parameters to update
+     * an array tree.
+     * 
+     * Add $tree[$key] = [] to make a new node.
+     * 
+     * @param mixed $key A key to add to $tree.
+     * @param mixed $tree A reference to a (sub)tree.
+     * 
+     * @see TreeArrays::setBranch()
      */
-    public static function addNodeForArray(mixed $key, mixed &$tree): void
+    public static function closureParamAddNodeForArray(mixed $key, mixed &$tree): void
     {
         if (!\is_array($tree))
             $tree = [];
@@ -47,45 +68,45 @@ final class TreeArrays
 
     /**
      * Implementation for the $setLeaf closure parameters using to update
-     * an array tree. 
+     * an array tree.
+     * 
+     * @param mixed $value A value to assign to the leaf.
+     * @param mixed &$leaf A reference to the leaf to assign.
+     * 
+     * @see TreeArrays::setBranch()
      */
-    public static function setLeafForArray(mixed $value, mixed &$leaf): void
+    public static function closureParamSetLeafForArray(mixed $value, mixed &$leaf): void
     {
         $leaf = $value;
     }
 
+    // ========================================================================
+
     /**
      * Updates a tree.
      * 
-     * @param mixed[] &$tree A reference to a tree to update.
-     * @param iterable<mixed> $args The entries to update.
-     * @param \Closure $mapKey
-     *  - $mapKey($key):int|string
+     * @template V
      * 
-     *  If set then transform each $args entry to ($mapKey($k) => $v).
-     * 
+     * @param V[] &$tree A reference to a tree to update.
+     * @param iterable<V> $args The entries to update.
      * @param \Closure $mustRecurse
-     *  - $mapKey($value):bool
-     * 
-     * Check wether a value must be recursively traversed.
+     *  Wether a value must be recursively traversed.
+     *  - $mustRecurse(V $value):bool
      */
     public static function update(
         array &$tree,
         iterable $args,
-        ?callable $mapKey = null,
         ?callable $mustRecurse = null,
     ): void {
-        if (null === $mapKey)
-            $mapKey = fn ($k) => $k;
         if (null === $mustRecurse)
-            $mustRecurse = self::mustRecurseForArray(...);
+            $mustRecurse = self::closureParamMustRecurseForArray(...);
 
         $existsp = null;
         $noexistsp = null;
         $exists = &$existsp;
         $noexists = &$noexistsp;
 
-        $existsp = function ($k, $v, &$tree) use (&$exists, &$noexists, $mapKey, $mustRecurse): void {
+        $existsp = function ($k, $v, &$tree) use (&$exists, &$noexists, $mustRecurse): void {
 
             if ($mustRecurse($v)) {
                 $p = &$tree[$k];
@@ -93,19 +114,19 @@ final class TreeArrays
                 if (!\is_array($p))
                     $p = [];
 
-                Arrays::updateWithClosures($p, $v, $exists, $noexists, $mapKey);
+                Arrays::updateWithClosures($p, $v, $exists, $noexists);
             }
         };
-        $noexistsp = function ($k, $v, &$tree) use (&$exists, &$noexists, $mapKey, $mustRecurse): void {
+        $noexistsp = function ($k, $v, &$tree) use (&$exists, &$noexists, $mustRecurse): void {
 
             if ($mustRecurse($v)) {
                 $tree[$k] = [];
                 $p = &$tree[$k];
-                Arrays::updateWithClosures($p, $v, $exists, $noexists, $mapKey);
+                Arrays::updateWithClosures($p, $v, $exists, $noexists);
             } else
                 $tree[$k] = $v;
         };
-        Arrays::updateWithClosures($tree, $args, $exists, $noexists, $mapKey);
+        Arrays::updateWithClosures($tree, $args, $exists, $noexists);
     }
 
     // ========================================================================
@@ -116,24 +137,22 @@ final class TreeArrays
      * A branch corresponds to a path to follow recursively in an array.
      * The function assigns a value to a branch in the array.
      * 
-     * @param mixed[] &$tree A tree in which set a branch.
-     * @param iterable<int,string|int> $path A path to traverse in the array.
-     * @param ?\Closure $hasKey
-     *  - $hasKey($key,$tree):bool
+     * @template K
+     * @template V
      * 
+     * @param iterable<K,V> &$tree A tree in which set a branch.
+     * @param iterable<int,K> $path A path to traverse in the array.
+     * @param ?\Closure $hasKey
      * Checks whether $tree[$key] exists.
      * This can only be called once at the first unexistant key encoutered.
-     * 
+     *  - $hasKey(K $key, V $tree):bool
      * @param ?\Closure $addNode
-     *  - $addNode($key,&$tree):void
-     * 
      * Add a new node.
-     * 
+     *  - $addNode(K $key,V &$tree):void
      * @param ?\Closure $setLeaf
-     *  - $setLeaf($value,&$leaf):void
-     * 
      * Assign a value to the leaf.
-     * @param mixed $value The value to assign to the branch.
+     *  - $setLeaf(V $value, V &$leaf):void
+     * @param V $value The value to assign to the branch.
      */
     public static function setBranch(
         iterable &$tree,
@@ -144,11 +163,11 @@ final class TreeArrays
         \Closure $setLeaf = null,
     ): void {
         if (null === $hasKey)
-            $hasKey = self::hasKeyForArray(...);
+            $hasKey = self::closureParamHasKeyForArray(...);
         if (null === $addNode)
-            $addNode = self::addNodeForArray(...);
+            $addNode = self::closureParamAddNodeForArray(...);
         if (null === $setLeaf)
-            $setLeaf = self::setLeafForArray(...);
+            $setLeaf = self::closureParamSetLeafForArray(...);
 
         $p = &$tree;
         $path = new \NoRewindIterator(Iterables::toIterator($path));
@@ -167,22 +186,24 @@ final class TreeArrays
     }
 
     /**
-     * Gets a reference to the leaf of a branch.
+     * Gets a reference to the value of a branch.
      * 
-     * @param mixed[] &$tree A reference to a tree.
-     * @param iterable<int,string|int> $path The path to follow.
-     * @param mixed $default A default value to return if the branch does not exists.
+     * @template K
+     * @template V
+     * @template D
+     * 
+     * @param iterable<K,V> &$tree A reference to a tree.
+     * @param iterable<int,K> $path The path to follow.
+     * @param D $default A default value to return if the branch does not exists.
      * @param ?\Closure $hasKey
+     *  Whether $key is a traversable key of a (sub)tree.
      *  - $hasKey($key,$tree):bool
-     * 
-     * Checks whether $tree[$key] exists.
-     * 
-     * @return mixed A reference to the $item reached by following $path, or $default if not existant.
+     * @return V|D A reference to the $item reached by following $path, or $default if not existant.
      */
     public static function &follow(iterable &$tree, iterable $path, $default = null, \Closure $hasKey = null): mixed
     {
         if (null === $hasKey)
-            $hasKey = self::hasKeyForArray(...);
+            $hasKey = self::closureParamHasKeyForArray(...);
 
         $p = &$tree;
 
@@ -196,19 +217,20 @@ final class TreeArrays
     /**
      * Follows a path in a tree.
      * 
-     * @param mixed[] &$tree A reference to a tree.
-     * @param iterable<int,string|int> $path The path to follow.
+     * @template K
+     * @template V
+     * 
+     * @param iterable<K,V> &$tree A reference to a tree.
+     * @param iterable<int,K> $path The path to follow.
      * @param ?\Closure $hasKey
+     *  Whether $key is a traversable key of a (sub)tree.
      *  - $hasKey($key,$tree):bool
-     * 
-     * Checks whether $tree[$key] exists.
-     * 
-     * @return mixed[] An array of references to the nodes of the branch, including the root and the leaf.
+     * @return array<int,V> An array of references to the nodes of the branch, including the root and the leaf.
      */
     public static function followNodes(iterable &$tree, iterable $path, \Closure $hasKey = null): array
     {
         if (null === $hasKey)
-            $hasKey = self::hasKeyForArray(...);
+            $hasKey = self::closureParamHasKeyForArray(...);
 
         $p = &$tree;
         $ret = [&$p];
@@ -248,14 +270,19 @@ final class TreeArrays
     // COUNT
 
     /**
-     * Counts the number of branches.
+     * Counts the number of leaves.
      * 
-     * @param iterable<mixed> $tree A tree.
+     * @template K
+     * @template V
+     * 
+     * @param iterable<K,V> $tree A tree.
      * @param ?\Closure $fdown
-     *  - $fdown(array $path, array &$subTree):bool
+     *  Whether the value following a path is a subtree that must be travelled.
+     *  - $fdown(array<int,K> $path, V &$maybeSubTree):bool
      * 
-     * Checks whether the travel must go recursively in the subtree of the branch of path $path.
-     * @return int The number of branches.
+     *  If null then 
+     *  - $fdown = fn ($path, $val) => \is_iterable($val)
+     * @return int The number of leaves.
      */
     public static function countBranches(iterable $tree, \Closure $fdown = null): int
     {
@@ -269,11 +296,16 @@ final class TreeArrays
     /**
      * Counts the number of nodes.
      * 
-     * @param iterable<mixed> $tree A tree.
-     * @param ?\Closure $fdown
-     *  - $fdown(array $path, array &$subTree):bool
+     * @template K
+     * @template V
      * 
-     * Checks whether the travel must go recursively in the subtree of the branch of path $path.
+     * @param iterable<K,V> $tree A tree.
+     * @param ?\Closure $fdown
+     *  Whether the value following a path is a subtree that must be travelled.
+     *  - $fdown(array<int,K> $path, V &$maybeSubTree):bool
+     * 
+     *  If null then 
+     *  - $fdown = fn ($path, $val) => \is_iterable($val)
      * @return int The number of nodes.
      */
     public static function countNodes(iterable $tree, \Closure $fdown = null): int
@@ -288,11 +320,16 @@ final class TreeArrays
     /**
      * Gets the maximal depth of the array.
      * 
-     * @param iterable<mixed> $tree An array.
-     * @param ?\Closure $fdown
-     *  - $fdown(array $path, array &$subTree):bool
+     * @template K
+     * @template V
      * 
-     * Checks whether the travel must go recursively in the subtree of the branch of path $path.
+     * @param iterable<K,V> $tree A tree.
+     * @param ?\Closure $fdown
+     *  Whether the value following a path is a subtree that must be travelled.
+     *  - $fdown(array<int,K> $path, V &$maybeSubTree):bool
+     * 
+     *  If null then 
+     *  - $fdown = fn ($path, $val) => \is_iterable($val)
      * @return int The depth of the array.
      */
     public static function getMaxDepth(iterable $tree, \Closure $fdown = null): int
@@ -308,14 +345,19 @@ final class TreeArrays
     // WALK
 
     /**
-     * Retrieves all the maximal paths of the array.
+     * Retrieves all the maximal paths of a tree.
      * 
-     * @param iterable<mixed> $tree A tree.
+     * @template K
+     * @template V
+     * 
+     * @param iterable<K,V> $tree A tree.
      * @param ?\Closure $fdown
-     *  - $fdown(array $path, array &$subTree):bool
+     *  Whether the value following a path is a subtree that must be travelled.
+     *  - $fdown(array<int,K> $path, V &$maybeSubTree):bool
      * 
-     * Checks whether the travel must go recursively in the subtree of the branch of path $path.
-     * @return array<int,array<int,int|string>> An array of paths.
+     *  If null then 
+     *  - $fdown = fn ($path, $val) => \is_iterable($val)
+     * @return array<int,array<int,K>> An array of paths.
      */
     public static function branches(iterable $tree, \Closure $fdown = null): array
     {
@@ -329,17 +371,19 @@ final class TreeArrays
     /**
      * Walks through all tree branches.
      * 
-     * @param iterable<mixed> &$tree A tree to walk through.
+     * @template K
+     * @template V
+     * 
+     * @param iterable<K,V> &$tree A reference to a tree to walk through.
      * @param ?\Closure $walk
-     *  - $walk(array $path, &$value):void
-     * 
-     * Do something at the leaf of the branch ($path) with its value ($value).
-     * 
+     *  Do something at the leaf of the branch ($path) with its value ($value).
+     *  - $walk(array<int,K> $path, V &$value):void
      * @param ?\Closure $fdown
-     *  - $fdown(array $path, array &$subTree):bool
+     *  Whether the value following a path is a subtree that must be travelled.
+     *  - $fdown(array<int,K> $path, V &$maybeSubTree):bool
      * 
-     * Checks whether the travel must go recursively in the subtree of the branch of path $path.
-     * 
+     *  If null then 
+     *  - $fdown = fn ($path, $val) => \is_iterable($val)
      */
     public static function walkBranches(
         iterable &$tree,
@@ -387,16 +431,16 @@ final class TreeArrays
      * 
      * Note that the root is a node to traverse.
      * 
-     * @param mixed[] &$tree A tree to walk through.
+     * @template K
+     * @template V
+     * 
+     * @param iterable<K,V> &$tree A reference to a tree to walk through.
      * @param \Closure $walk
-     *  - $walk(&$node):void
-     * 
      * Do something with a node.
-     * 
+     *  - $walk(V &$node):void
      * @param \Closure $mustRecurse
-     *  - $mapKey($value):bool
-     * 
-     * Check wether a value must be recursively traversed.
+     *  Check wether a value must be recursively traversed.
+     *  - $mustRecurse(V $value):bool
      */
     public static function walkNodes(
         iterable &$tree,
@@ -404,7 +448,7 @@ final class TreeArrays
         \Closure $mustRecurse = null
     ): void {
         if (null === $mustRecurse)
-            $mustRecurse = self::mustRecurseForArray(...);
+            $mustRecurse = self::closureParamMustRecurseForArray(...);
         $toProcess = [&$tree];
 
         while (!empty($toProcess)) {
@@ -427,7 +471,9 @@ final class TreeArrays
     /**
      * Removes multiple branches from an array tree.
      * 
-     * @param mixed[] &$tree A tree.
+     * @template V
+     * 
+     * @param V[] &$tree A reference to an array tree.
      * @param iterable<int|string> ...$paths Paths to the branches to remove.
      * @return array<mixed> Array of entries ($k => $v) where
      *  - $k is the key of the path entry ($k => $path) of the $paths iterable
@@ -446,8 +492,17 @@ final class TreeArrays
     /**
      * Removes a branch from a tree.
      * 
-     * @param mixed[] &$tree A tree.
-     * @param iterable<int,int|string> $path The path to the branch to remove.
+     * @template K
+     * @template V
+     * 
+     * @param iterable<K,V> &$tree A reference to a tree.
+     * @param iterable<int,K> $path The path to the branch to remove.
+     * @param ?\Closure $fdown
+     *  Whether the value following a path is a subtree that must be travelled.
+     *  - $fdown(array<int,K> $path, V &$maybeSubTree):bool
+     * 
+     *  If null then 
+     *  - $fdown = fn ($path, $val) => \is_iterable($val)
      * @return array<int,mixed> A triple [$traversed, $removed, $value] where
      *  - $traversed is the path to the node from wich the branch was removed
      *  - $removed is the part of the branch that was removed
@@ -482,9 +537,11 @@ final class TreeArrays
     /**
      * Removes some leaves from an array tree.
      * 
-     * @param mixed[] &$tree A tree.
-     * @param iterable<int,int|string> ...$paths The paths to the leaves to remove.
-     * @return array<int,mixed> Array of entries ($k => $v) where
+     * @template V
+     * 
+     * @param V[] &$tree A reference to an array tree.
+     * @param iterable<string|int> ...$paths The paths to the leaves to remove.
+     * @return array<V> Array of entries ($k => $v) where
      *  - $k is the key of the path entry ($k => $path) of the $paths iterable
      *  - $v is the return of self::removeLeaf($array, $path)
      */
@@ -499,9 +556,18 @@ final class TreeArrays
     /**
      * Removes a branch from a tree.
      * 
-     * @param mixed[] &$tree A tree.
-     * @param iterable<int,int|string> $path The path to the leaf to remove.
-     * @return mixed The removed value.
+     * @template K
+     * @template V
+     * 
+     * @param iterable<K,V> &$tree A reference to a tree.
+     * @param iterable<int,K> $path The path to the leaf to remove.
+     * @param ?\Closure $fdown
+     *  Whether the value following a path is a subtree that must be travelled.
+     *  - $fdown(array<int,K> $path, V &$maybeSubTree):bool
+     * 
+     *  If null then 
+     *  - $fdown = fn ($path, $val) => \is_iterable($val)
+     * @return V The removed value.
      */
     public static function removeLeaf(iterable &$tree, iterable $path, \Closure $fdown = null): mixed
     {
