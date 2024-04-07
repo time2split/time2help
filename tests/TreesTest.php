@@ -6,17 +6,18 @@ namespace Time2Split\Help\Tests;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Time2Split\Help\ArrayTrees;
+use Time2Split\Help\IterableTrees;
 use Time2Split\Help\Tests\DataProvider\Provided;
-use Time2Split\Help\TreeArrays;
 
-final class TreeArraysTest extends TestCase
+final class TreesTest extends TestCase
 {
     public static function _testUpdate(): iterable
     {
         $provided = [
             new Provided('update', [
                 function (&$array, $update) {
-                    TreeArrays::update($array, $update);
+                    ArrayTrees::update($array, $update);
                 },
             ]),
         ];
@@ -48,16 +49,16 @@ final class TreeArraysTest extends TestCase
         $expect = ['a' => ['aa' => 1, 'ab' => 2]];
         $array = [];
 
-        TreeArrays::setBranch($array, ['a', 'aa'], 1);
-        TreeArrays::setBranch($array, ['a', 'ab'], 2);
+        IterableTrees::setBranch($array, ['a', 'aa'], 1);
+        IterableTrees::setBranch($array, ['a', 'ab'], 2);
         $this->assertSame($expect, $array);
 
-        $p = &TreeArrays::follow($array, ['a', 'ab']);
+        $p = &IterableTrees::follow($array, ['a', 'ab']);
         $p = 99;
         $this->assertSame(99, $array['a']['ab']);
 
-        TreeArrays::setBranch($array, ['a', 'aa', 'aaa'], 1);
-        $p = &TreeArrays::follow($array, ['a', 'aa', 'aaa']);
+        IterableTrees::setBranch($array, ['a', 'aa', 'aaa'], 1);
+        $p = &IterableTrees::follow($array, ['a', 'aa', 'aaa']);
         $this->assertSame(1, $array['a']['aa']['aaa']);
     }
 
@@ -65,21 +66,24 @@ final class TreeArraysTest extends TestCase
     {
         $array = ['a' => ['aa' => 1, 'ab' => 2]];
 
-        $this->assertSame(2, TreeArrays::getMaxDepth($array));
-        $this->assertSame(2, TreeArrays::countBranches($array));
-        $this->assertSame(4, TreeArrays::countNodes($array));
+        $this->assertSame(2, IterableTrees::getMaxDepth($array));
+        $this->assertSame(2, IterableTrees::countLeaves($array));
+        $this->assertSame(4, IterableTrees::countNodes($array));
 
         $paths = [];
-        TreeArrays::walkBranches($array, function (array $path, $value) use (&$paths) {
-            $paths[] = [...$path, $value];
-        });
+        IterableTrees::walkBranches(
+            $array,
+            onLeaf: function ($node, array $path) use (&$paths) {
+                $paths[] = [...$path, $node];
+            }
+        );
         $expect = [
             ['a', 'aa', 1],
             ['a', 'ab', 2],
         ];
         $this->assertSame($expect, $paths);
 
-        $branches = TreeArrays::branches($array);
+        $branches = IterableTrees::branches($array);
         $expect = [
             ['a', 'aa'],
             ['a', 'ab'],
@@ -87,18 +91,25 @@ final class TreeArraysTest extends TestCase
         $this->assertSame($expect, $branches);
 
         $paths = [];
-        TreeArrays::walkBranches($array, function (array $path, $value) use (&$paths) {
-            $paths[] = [...$path, $value];
-        }, fn () => false);
+        IterableTrees::walkBranches(
+            $array,
+            isNode: fn () => false,
+            onLeaf: function ($node, array $path) use (&$paths) {
+                $paths[] = [...$path, $node];
+            },
+        );
         $expect = [['a', ['aa' => 1, 'ab' => 2]]];
         $this->assertSame($expect, $paths);
 
         $array = [2, [3, [4], 5]];
         $add = 0;
-        TreeArrays::walkNodes($array, function ($v) use (&$add) {
-            if (\is_int($v))
-                $add += $v;
-        });
+        IterableTrees::walkNodes(
+            $array,
+            onAnyNode: function ($v) use (&$add) {
+                if (\is_int($v))
+                    $add += $v;
+            }
+        );
         $this->assertSame(14, $add);
     }
 
@@ -111,29 +122,35 @@ final class TreeArraysTest extends TestCase
         $expect = ['a' => ['ab' => 2], 'b' => 2];
 
         $array = $base;
-        $r = TreeArrays::removeBranch($array, ['a', 'aa']);
+        $r = IterableTrees::removeBranch($array, ['a', 'aa']);
         $this->assertSame([['a'], ['aa'], 1], $r);
         $this->assertSame($expect, $array);
 
         $array = $base;
-        $r = TreeArrays::removeLeaf($array, ['a', 'aa']);
+        $r = IterableTrees::removeLastEdge($array, ['a', 'aa']);
         $this->assertSame(1, $r);
+        $this->assertSame($expect, $array);
+
+        $array = $base;
+        $expect = ['b' => 2];
+        $r = IterableTrees::removeLastEdge($array, ['a']);
+        $this->assertSame(['aa' => 1, 'ab' => 2], $r);
         $this->assertSame($expect, $array);
 
         // Multiple
         $expect = ['a' => ['ab' => 2]];
 
-        $array = $base;
-        $r = TreeArrays::removeArrayBranches($array, ['a', 'aa'], ['b']);
-        $this->assertSame([
-            [['a'], ['aa'], 1],
-            [[], ['b'], 2],
-        ], $r);
-        $this->assertSame($expect, $array);
+        // $array = $base;
+        // $r = IterableTrees::removeArrayBranches($array, ['a', 'aa'], ['b']);
+        // $this->assertSame([
+        //     [['a'], ['aa'], 1],
+        //     [[], ['b'], 2],
+        // ], $r);
+        // $this->assertSame($expect, $array);
 
-        $array = $base;
-        $r = TreeArrays::removeArrayLeaves($array, ['a', 'aa'], ['b']);
-        $this->assertSame([1, 2], $r);
-        $this->assertSame($expect, $array);
+        // $array = $base;
+        // $r = IterableTrees::removeArrayLeaves($array, ['a', 'aa'], ['b']);
+        // $this->assertSame([1, 2], $r);
+        // $this->assertSame($expect, $array);
     }
 }

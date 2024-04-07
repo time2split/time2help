@@ -127,9 +127,12 @@ final class ArrayLists
      */
     public static function muteToListRecursive(array &$array): void
     {
-        TreeArrays::walkNodes($array, function (&$val) {
-            if (\is_array($val))
-                self::muteToList($val);
-        });
+        IterableTrees::walkNodes(
+            $array,
+            onAnyNode: function (&$val) {
+                if (\is_array($val))
+                    self::muteToList($val);
+            }
+        );
     }
 }
