@@ -428,7 +428,7 @@ final class Arrays
     }
 
     /**
-     * Updates some existant entries in an array and returns the entries before the update.
+     * Updates some existant entries in an array and returns the entries before their update.
      * 
      * @template V
      * 

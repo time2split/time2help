@@ -10,6 +10,7 @@ use Time2Split\Help\Classes\NotInstanciable;
  * Functions to create char predicate closures.
  * 
  * @author Olivier Rodriguez (zuri)
+ * @package time2help\IO
  */
 final class CharPredicates
 {
@@ -62,7 +63,7 @@ final class CharPredicates
     }
 
     /**
-     * Test if a character is a delimiter.
+     * Whether a character is a given delimiter.
      *
      * @param string $c
      *            The character to test as a possible delimiter.

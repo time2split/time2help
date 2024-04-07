@@ -1,9 +1,9 @@
 <?php
+
 namespace Time2Split\Help\Classes;
 
 /**
- * Specify that a class is not instanciable.
- * 
+ * Specifies that a class is not instanciable.
  * 
  * @author Olivier Rodriguez (zuri)
  */

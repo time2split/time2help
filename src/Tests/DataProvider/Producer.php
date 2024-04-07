@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Time2Split\Help\Tests\DataProvider;
 
 /**
- * Produce an element in a Provided.
+ * Produces an element in a Provided.
  * 
  * A producer instance is intended to be used as an element of {@see Provided::$data}.
  * It permits to dynamically generate an element when encoutered in a {@see Provided::merge()} iterator. 

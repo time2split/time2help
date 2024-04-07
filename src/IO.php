@@ -10,6 +10,7 @@ use Time2Split\Help\Classes\NotInstanciable;
  * Functions for inputs/outputs.
  *
  * @author Olivier Rodriguez (zuri)
+ * @package time2help\IO
  */
 final class IO
 {

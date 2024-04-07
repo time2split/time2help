@@ -7,7 +7,7 @@ namespace Time2Split\Help\Tests\DataProvider;
 use Time2Split\Help\Iterables;
 
 /**
- * Provide data for unit test.
+ * Provides data for unit test.
  * 
  * This class was firstly implemented to simplify the definition of DataProvider methods in PHPUnit.
  * The use case is to define multiple arrays of Provided and proceed to a cartesian product 

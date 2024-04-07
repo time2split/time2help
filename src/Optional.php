@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Time2Split\Help;
 
 /**
- * An container which may contain a value.
+ * A container which may contain a value.
  * 
  * The class is inspired by that of Java, but contrary to it it allows null values.
  *
@@ -61,7 +61,7 @@ final class Optional
      * 
      * @template V
      * @param V $value The possibly-null value to describe.
-     * @param mixed $null The null value to consider.
+     * @param mixed $null The value to be considered as null.
      * @return Optional<V> An Optional with a present value if the specified value is non-null, otherwise an empty Optional.
      */
     public static function ofNullable($value, $null = null): self
@@ -94,7 +94,7 @@ final class Optional
     // ========================================================================
 
     /**
-     * Return true if there is a value present, otherwise false.
+     * Returns true if there is a value present, otherwise false.
      */
     public final function isPresent(): bool
     {
@@ -104,6 +104,7 @@ final class Optional
     /**
      * If a value is present in this Optional, returns the value, otherwise throws \Error.
      * @return T The value of the optional.
+     * @throws \Error
      */
     public final function get()
     {
@@ -114,7 +115,7 @@ final class Optional
     }
 
     /**
-     * Return the value if present, otherwise return $other.
+     * Returns the value if present, otherwise return $other.
      * 
      * @param mixed $other The value to be returned if there is no value present, may be null.
      * @return mixed The value, if present, otherwise $other.
@@ -128,7 +129,7 @@ final class Optional
     }
 
     /**
-     * Return the value if present, otherwise invoke other and return the result of that invocation.
+     * Returns the value if present, otherwise invoke other and return the result of that invocation.
      * 
      * @param \Closure $supplier A Supplier whose result is returned if no value is present.
      * @return T|mixed The value if present otherwise the result of $other().

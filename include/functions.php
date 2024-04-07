@@ -1,44 +1,36 @@
 <?php
 
-function error_dump(...$params)
+/**
+ * Prints human-readable information about some values on STDERR.
+ * 
+ * @param mixed ...$values The values to print.
+ */
+function error_dump(...$values)
 {
-    foreach ($params as $p)
+    foreach ($values as $p)
         fwrite(STDERR, print_r($p, true) . "\n");
 }
 
-function error_dump_exit(...$params)
+/**
+ * Prints human-readable information about some values on STDERR,
+ * then call exit().
+ * 
+ * @param mixed ...$values The values to print.
+ */
+function error_dump_exit(...$values)
 {
-    error_dump(...$params);
+    error_dump(...$values);
     exit();
 }
 
-function is_array_list($array): bool
+/**
+ * Whether a value is a list
+ * 
+ * @param mixed $value A value to check.
+ * 
+ * @link https://www.php.net/manual/en/function.array-is-list.php array_is_list()
+ */
+function is_array_list($value): bool
 {
-    return \is_array($array) && \array_is_list($array);
-}
-
-function str_format(string $s, array $vars): string
-{
-    return \str_replace(\array_map(fn ($k) => "%$k", \array_keys($vars)), \array_values($vars), $s);
-}
-
-function str_empty(string $s): bool
-{
-    return strlen($s) === 0;
-}
-
-function srange($min, $max): string
-{
-    if ($min === $max)
-        return "$min";
-
-    return "$min,$max";
-}
-
-function removePrefix(string $s, string $prefix): string
-{
-    if (0 === \strpos($s, $prefix))
-        return \substr($s, \strlen($prefix));
-
-    return $s;
+    return \is_array($value) && \array_is_list($value);
 }

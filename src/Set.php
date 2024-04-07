@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace Time2Split\Help;
 
 /**
- * Extends BaseSet with utility methods.
+ * BaseSet implementation with utility methods.
  *
+ * This implementation is common to all BaseSet instances provided by the library.
  * 
  * The class {@see Sets} provides static factory methods to create instances of {@see Set}.
  * 
@@ -37,7 +38,7 @@ abstract class Set implements BaseSet
     }
 
     /**
-     * Assign multiple items.
+     * Assigns multiple items.
      *
      * @param T ...$items
      *            Items to assign.
@@ -51,7 +52,7 @@ abstract class Set implements BaseSet
     }
 
     /**
-     * Drop multiple items.
+     * Drops multiple items.
      *
      * @param T ...$items
      *            Items to drop.
@@ -65,10 +66,10 @@ abstract class Set implements BaseSet
     }
 
     /**
-     * Assign multiple items from multiple lists.
+     * Assigns multiple items from multiple lists.
      *
      * @param iterable<T> ...$lists
-     *            Lists of items to drop.
+     *            Lists of items to assign.
      * @return static This set.
      */
     public final function setFromList(iterable ...$lists): static
@@ -81,7 +82,7 @@ abstract class Set implements BaseSet
     }
 
     /**
-     * Drop multiples items from multiple lists.
+     * Drops multiples items from multiple lists.
      *
      * @param iterable<T> ...$lists
      *            Lists of items to drop.

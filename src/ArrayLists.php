@@ -20,7 +20,7 @@ final class ArrayLists
     use NotInstanciable;
 
     /**
-     * Ensures that a value is a list.
+     * Ensures that a value is a list, or wraps it inside an array.
      *
      * @param  mixed $value A value.
      * @return array<int,mixed> Transforms any array $value to \array_values($value),

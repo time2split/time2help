@@ -64,7 +64,7 @@ final class Sets
     }
 
     /**
-     * Get a self::arrayKeys() able to store arbitrary elements
+     * Gets a self::arrayKeys() able to store arbitrary elements
      * as long as an element can be associated to a unique array key identifier.
      *
      * This class permits to handle more types of values and not just array keys.
@@ -137,7 +137,7 @@ final class Sets
     }
 
     /**
-     * Decorate a set to be unmodifiable.
+     * Decorates a set to be unmodifiable.
      *
      * Call to a mutable method of the set will throws a {@see Exception\UnmodifiableSetException}.
      *
@@ -164,8 +164,10 @@ final class Sets
     private static Set $null;
 
     /**
-     * Get the null pattern unmodifiable set.
+     * Gets the null pattern unmodifiable set.
      *
+     * The value is a singleton and may be compared with the === operator.
+     * 
      * @return Set<void> The unique null pattern set.
      */
     public static function null(): Set

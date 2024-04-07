@@ -11,7 +11,8 @@ use Time2Split\Help\Set;
  * @internal
  * @template D
  * @template T
- * @implements \IteratorAggregate<int,T>
+ * @extends Set<T>
+ * @implements \IteratorAggregate<T>
  * @author Olivier Rodriguez (zuri)
  */
 abstract class SetDecorator extends Set implements \IteratorAggregate

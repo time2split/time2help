@@ -5,14 +5,14 @@ declare(strict_types=1);
 namespace Time2Split\Help;
 
 /**
- * A set data-structure to store elements of type T.
+ * A set data-structure to store elements without duplicates.
  * 
- * An element can only be assigned once in a Baseset.
- * The comparison operation to check if two elements are equals depends on the set implementation.
+ * Each element in a set is unique according to a comparison operation.
+ * The comparison operation depends on the implementation of the set.
  * 
- * A Baseset provides the array syntax facilities to query and modify the set contents,
- * however its only facilities: a set must not be considered as an array.
- * A Baseset<T> stores instances of T, there is no key semantic.
+ * A base set uses the array syntax to query and modify its contents,
+ * however the array syntax is only provided for facilities:
+ * a set can never be considered as an array.
  *
  * This library always provides implementations of BaseSet extending the abstract class {@see Set}.
  * The class {@see Sets} provides static factory methods to create instances of {@see Set}.
@@ -28,7 +28,7 @@ interface BaseSet extends \ArrayAccess, \Countable, \Traversable
 {
 
     /**
-     * Check if an item is assigned to the set.
+     * Whether an item is assigned to the set.
      * 
      * @param T $item An item.
      * @return bool true if the value is assigned, or false if not.
@@ -37,7 +37,7 @@ interface BaseSet extends \ArrayAccess, \Countable, \Traversable
     public function offsetGet($item): bool;
 
     /**
-     * Assign or drop an item.
+     * Assigns or drops an item.
      * 
      * @param T $item An item.
      * @param bool $value true to add the item, or false to drop it.
@@ -46,7 +46,7 @@ interface BaseSet extends \ArrayAccess, \Countable, \Traversable
     public function offsetSet($item, $value): void;
 
     /**
-     * Drop an item.
+     * Drops an item.
      * 
      * @param T $item An item.
      * @link https://www.php.net/manual/en/arrayaccess.offsetunset.php ArrayAccess::offsetUnset()
@@ -54,9 +54,10 @@ interface BaseSet extends \ArrayAccess, \Countable, \Traversable
     public function offsetUnset($item): void;
 
     /**
-     * Whether an item exists.
+     * Whether an item is assigned to the set.
      * 
      * @param T $item An item.
+     * @return bool true if the value is assigned, or false if not.
      * @link https://www.php.net/manual/en/arrayaccess.offsetexists.php ArrayAccess::offsetExists()
      */
     public function offsetExists($item): bool;

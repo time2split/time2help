@@ -10,13 +10,14 @@ use Time2Split\Help\Classes\NotInstanciable;
  * Functions for stream resource.
  * 
  * @author Olivier Rodriguez (zuri)
+ * @package time2help\IO
  */
 final class Streams
 {
     use NotInstanciable;
 
     /**
-     * Get a stream from a string.
+     * Gets a stream from a string.
      * @return resource
      */
     public static function stringToStream(string $text = '', string $mode = 'r+')
@@ -32,7 +33,7 @@ final class Streams
     }
 
     /**
-     * Check if a stream is seekable.
+     * Checks if a stream is seekable.
      * 
      * @param resource $stream A resource stream.
      * @param null|array<string,mixed> $meta_data The meta data of the stream obtained from \stream_get_meta_data().
@@ -46,7 +47,7 @@ final class Streams
     }
 
     /**
-     * Check if a stream is readable.
+     * Checks if a stream is readable.
      * 
      * @param resource $stream A resource stream.
      * @param null|array<string,mixed> $meta_data The meta data of the stream obtained from \stream_get_meta_data().
@@ -62,7 +63,7 @@ final class Streams
     }
 
     /**
-     * Ensure that a stream is readable.
+     * Ensures that a stream is readable.
      * 
      * @param string|resource $stream A stream or a string.
      * @param bool $rewind true if the returned stream must be rewind.
@@ -97,7 +98,7 @@ final class Streams
     // ========================================================================
 
     /**
-     * Skip some characters from a stream according to a predicate.
+     * Skips some characters from a stream according to a predicate.
      * 
      * @param resource $stream A stream.
      * @param \Closure $predicate A predicate that return true if its input character must be read.
@@ -112,7 +113,7 @@ final class Streams
         );
     }
     /**
-     * Skip some characters from a stream until a predicate is true.
+     * Skips some characters from a stream until a predicate is true.
      * 
      * @param resource $stream A stream.
      * @param \Closure $predicate A predicate that return true if its input character must not be read.
@@ -124,7 +125,7 @@ final class Streams
     }
 
     /**
-     * Get some characters from a stream according to a predicate.
+     * Gets some characters from a stream according to a predicate.
      * 
      * @param resource $stream A stream.
      * @param \Closure $predicate A predicate that return true if its input character must be read.
@@ -140,7 +141,7 @@ final class Streams
     }
 
     /**
-     * Get some characters from a stream until a character or a predicate is true.
+     * Gets some characters from a stream until a character or a predicate is true.
      * 
      * @param resource $stream A stream.
      * @param \Closure $endDelimiter A predicate closure that return true if its input character must not be read, or a character that must end the reading when encountered in the stream.
@@ -156,7 +157,7 @@ final class Streams
     }
 
     /**
-     * Decrement the stream position of some chars.
+     * Decrements the stream position of some chars.
      * 
      * @param resource $stream A stream to decrement.
      * @param int $nb The number of positions to decrement.

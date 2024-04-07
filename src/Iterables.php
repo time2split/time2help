@@ -18,7 +18,7 @@ final class Iterables
     use NotInstanciable;
 
     /**
-     * Ensures that a value is iterable like a list (ordered int keys).
+     * Ensures that a value is iterable like a list (ordered int keys), or wraps it inside an array.
      *
      * @param mixed $value A value.
      * @return iterable<int,mixed> Transforms any iterable<V> $value to an iterable<int,V> one,
@@ -34,7 +34,7 @@ final class Iterables
     }
 
     /**
-     * Ensures that a value is iterable.
+     * Ensures that a value is iterable, or wraps it inside an array.
      *
      * @param mixed $value A value.
      * @return iterable<mixed> Return the iterable $value, else return [$value].
@@ -47,12 +47,12 @@ final class Iterables
     }
 
     /**
-     * Ensures that a value is an \Iterator.
+     * Ensures that an iterable is an \Iterator.
      *
      * @template K
      * @template V
      * @param iterable<K,V> $iterable An iterable.
-     * @return \Iterator<K,V> Return the iterable $value, else return [$value].
+     * @return \Iterator<K,V> Return an iterator of the given iterable.
      */
     public static function toIterator(iterable $iterable): \Iterator
     {
@@ -92,7 +92,7 @@ final class Iterables
     // ========================================================================
 
     /**
-     * Count the number of entries of A sequence of entries.
+     * Counts the number of entries of an iterable.
      *
      * @template K
      * @template V
@@ -114,7 +114,7 @@ final class Iterables
     // ========================================================================
 
     /**
-     * Iterate through the keys.
+     * An iterator over an array's keys.
      *
      * @template K
      * @template V
@@ -132,7 +132,7 @@ final class Iterables
     }
 
     /**
-     * Iterate through the values.
+     * An iterator over an array's values.
      *
      * @template K
      * @template V
@@ -149,7 +149,7 @@ final class Iterables
     }
 
     /**
-     * Iterate in reverse order.
+     * An iterator over an iterable's entries in reverse order.
      *
      * @template K
      * @template V
@@ -166,7 +166,7 @@ final class Iterables
     }
 
     /**
-     * Iterate through the keys in reverse order.
+     * An iterator over an iterable's keys in reverse order.
      *
      * @template K
      * @template V
@@ -183,7 +183,7 @@ final class Iterables
     }
 
     /**
-     * Iterate through the values in reverse order.
+     * An iterator over an iterable's values in reverse order.
      *
      * @template K
      * @template V
@@ -199,7 +199,7 @@ final class Iterables
     }
 
     /**
-     * Iterate through each entry reversing its key and its value (ie: $val => $key).
+     * An iterator over an iterable's entries reversing their key with its value (ie: $val => $key).
      *
      * @template K
      * @template V
@@ -215,8 +215,7 @@ final class Iterables
                 yield $v => $k;
     }
     /**
-     *
-     * Iterate through the flipped entries in reverse order.
+     * An iterator over the flipped entries of an iterable in reverse order.
      *
      * @template K
      * @template V
@@ -314,7 +313,7 @@ final class Iterables
     }
 
     /**
-     * Iterate through the first entry.
+     * An iterator over the first array entry.
      *
      * @template K
      * @template V
@@ -333,7 +332,7 @@ final class Iterables
     }
 
     /**
-     * Iterate through the last entry.
+     * An iterator over the last array entry.
      *
      * @template K
      * @template V
@@ -357,7 +356,7 @@ final class Iterables
 
     // ========================================================================
     /**
-     * Apply closures to each key and value from entries.
+     * Applies closures to each key and value from entries.
      *
      * @template K
      * @template V
@@ -374,7 +373,7 @@ final class Iterables
 
 
     /**
-     * Apply a closure on each key.
+     * Applies a closure on each key.
      *
      * @template K
      * @template V
@@ -389,7 +388,7 @@ final class Iterables
     }
 
     /**
-     * Apply a closure on each value.
+     * Applies a closure on each value.
      *
      * @template K
      * @template V
@@ -406,7 +405,7 @@ final class Iterables
     // ========================================================================
 
     /**
-     * Iterate through a slice of an iterable.
+     * An iterator over a slice of an iterable.
      *
      * @template K
      * @template V
@@ -522,7 +521,7 @@ final class Iterables
     // ========================================================================
 
     /**
-     * Check that an iterable has the same values as another (order independent).
+     * Checks that an iterable has the same values as another (order independent).
      *
      * @param iterable<mixed> $a An iterable.
      * @param iterable<mixed> $b An iterable.
@@ -541,7 +540,7 @@ final class Iterables
     }
 
     /**
-     * Finds the values of $a that are not in $b.
+     * Finds the values of an iterable $a that are not in an iterable $b.
      *
      * Each value of $b can at most be tagged once to be a value of $a.
      * For instance if $a=['a', 'a'] and $b=['a']
@@ -637,7 +636,7 @@ final class Iterables
     // ========================================================================
 
     /**
-     * Check if two sequences are in an equal relation according to external keys and values comparison closures.
+     * Checks if two sequences are in an equal relation according to external keys and values comparison closures.
      *
      * Two sequences are in an equal relation if they have the same (key => value) entries in the same order.
      *
@@ -653,7 +652,7 @@ final class Iterables
     }
 
     /**
-     * Check if two sequences are equals using one of the php equal operator (== or ===) as keys and values comparison.
+     * Checks if two sequences are equals using one of the php equal operator (== or ===) as keys and values comparison.
      *
      * Two sequences are equals if they have the same key => value entries in the same order.
      *
@@ -669,7 +668,7 @@ final class Iterables
     }
 
     /**
-     * Check if a sequence is the begining of another one according to external keys and values comparison closures.
+     * Checks if a sequence is the begining of another one according to external keys and values comparison closures.
      *
      * @param iterable<mixed,mixed> $a The first sequence of entries.
      * @param iterable<mixed,mixed> $b The second sequence of entries.
@@ -684,7 +683,7 @@ final class Iterables
     }
 
     /**
-     * Check if a sequence is the begining of another using one of the php equal operator (== or ===) as keys and values comparison.
+     * Checks if a sequence is the begining of another using one of the php equal operator (== or ===) as keys and values comparison.
      *
      * @param iterable<mixed,mixed> $a The first sequence of entries.
      * @param iterable<mixed,mixed> $b The second sequence of entries.
@@ -701,7 +700,7 @@ final class Iterables
     // ========================================================================
 
     /**
-     * Check if two lists are in an equal relation according to an external values comparison closure.
+     * Checks if two lists are in an equal relation according to an external values comparison closure.
      *
      * Two lists are in an equal relation if they have the same values in the same order.
      *
@@ -716,7 +715,7 @@ final class Iterables
     }
 
     /**
-     * Check if two lists are in an equal relation using one of the php equal operator (== or ===) as values comparison.
+     * Checks if two lists are in an equal relation using one of the php equal operator (== or ===) as values comparison.
      *
      * Two lists are in an equal relation if they have the same values in the same order.
      *
@@ -731,7 +730,7 @@ final class Iterables
     }
 
     /**
-     * Check if a list is the begining of another one according to an external values comparison closure.
+     * Checks if a list is the begining of another one according to an external values comparison closure.
      *
      * @param iterable<mixed,mixed> $a The first list of values.
      * @param iterable<mixed,mixed> $b The second list of values.
@@ -745,7 +744,7 @@ final class Iterables
     }
 
     /**
-     * Check if a list is the begining of another one using one of the php equal operator (== or ===) as values comparison.
+     * Checks if a list is the begining of another one using one of the php equal operator (== or ===) as values comparison.
      *
      * @param iterable<mixed,mixed> $a The first list of values.
      * @param iterable<mixed,mixed> $b The second list of values.
@@ -843,7 +842,7 @@ final class Iterables
     /**
      * Cartesian product between iterables;
      * each selected entry ($k_i => $v_i) of an iterable
-     * is returned as an array pair [$k_i, $v_i] in the result.
+     * is returned as an array pair [$k_i, $v_i].
      *
      *  Note that a cartesian product has no result if an iterable is empty.
      * 

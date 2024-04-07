@@ -20,7 +20,7 @@ final class IterableTrees
     }
 
     /**
-     * Implementation for the $hasKey closure parameters to traverse
+     * Default implementation for the $hasKey closure parameters to traverse
      * an array tree.
      * 
      * @param mixed $node A node.
@@ -41,7 +41,7 @@ final class IterableTrees
      * an array tree.
      * 
      * @param mixed $node A node.
-     * @param mixed $key A possible key of $tree.
+     * @param mixed[] $path The path to the node.
      * @return bool true if $tree is an array.
      * 
      * @see Trees::countLeaves()
@@ -65,7 +65,7 @@ final class IterableTrees
      * Add $tree[$key] = [] to make a new node.
      * 
      * @param mixed &$node A reference to a node.
-     * @param mixed $key A key to add to $tree.
+     * @param mixed $key The key if the child edge to add to the node.
      * 
      * @see Trees::setBranch()
      */
