@@ -4,12 +4,10 @@ declare(strict_types=1);
 
 namespace Time2Split\Help\_private\Set;
 
-use Time2Split\Help\Set;
-
 /**
  * @internal
  */
-abstract class SetWithStorage extends Set implements \IteratorAggregate
+abstract class SetWithStorage extends BaseSet implements \IteratorAggregate
 {
     /**
      * @var bool[]|(\Traversable<mixed,bool>&\Countable) $storage

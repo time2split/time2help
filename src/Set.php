@@ -5,37 +5,65 @@ declare(strict_types=1);
 namespace Time2Split\Help;
 
 /**
- * BaseSet implementation with utility methods.
- *
- * This implementation is common to all BaseSet instances provided by the library.
+ * A set data-structure to store elements without duplicates.
  * 
+ * Each element in a set is unique according to a comparison operation.
+ * The comparison operation depends on the implementation of the set.
+ * 
+ * A set uses the array syntax to query and modify its contents,
+ * however the array syntax is only provided for facilities:
+ * a set can never be considered as an array.
+ *
  * The class {@see Sets} provides static factory methods to create instances of {@see Set}.
  * 
  * @template T
- * @implements BaseSet<T>
+ * @extends \ArrayAccess<T,bool>
+ * @extends \Traversable<T>
  * 
  * @package time2help\container
  * @author Olivier Rodriguez (zuri)
  */
-abstract class Set implements BaseSet
+interface Set extends \ArrayAccess, \Countable, \Traversable
 {
 
     /**
-     * @param T $item $item
+     * Whether an item is assigned to the set.
+     * 
+     * @param T $item An item.
+     * @return bool true if the item is assigned, or false if not.
+     * @link https://www.php.net/manual/en/arrayaccess.offsetget.php ArrayAccess::offsetGet()
      */
-    public final function offsetUnset($item): void
-    {
-        $this->offsetSet($item, false);
-    }
-
+    public function offsetGet($item): bool;
 
     /**
-     * @param T $item $item
+     * Assigns or drops an item.
+     * 
+     * @param T $item An item.
+     * @param bool $value true to add the item, or false to drop it.
+     * @link https://www.php.net/manual/en/arrayaccess.offsetset.php ArrayAccess::offsetSet()
      */
-    public final function offsetExists($item): bool
-    {
-        return $this->offsetGet($item);
-    }
+    public function offsetSet($item, $value): void;
+
+    /**
+     * Drops an item.
+     * 
+     * @param T $item An item.
+     * @link https://www.php.net/manual/en/arrayaccess.offsetunset.php ArrayAccess::offsetUnset()
+     */
+    public function offsetUnset($item): void;
+
+    /**
+     * Whether an item is assigned to the set.
+     * 
+     * @param T $item An item.
+     * @return bool true if the item is assigned, or false if not.
+     * @link https://www.php.net/manual/en/arrayaccess.offsetexists.php ArrayAccess::offsetExists()
+     */
+    public function offsetExists($item): bool;
+
+    // ========================================================================
+    // Utilities
+    // ========================================================================
 
     /**
      * Assigns multiple items.
@@ -44,12 +72,7 @@ abstract class Set implements BaseSet
      *            Items to assign.
      * @return static This set.
      */
-    public final function setMore(...$items): static
-    {
-        foreach ($items as $item)
-            $this->offsetSet($item, true);
-        return $this;
-    }
+    public function setMore(...$items): static;
 
     /**
      * Drops multiple items.
@@ -58,12 +81,7 @@ abstract class Set implements BaseSet
      *            Items to drop.
      * @return static This set.
      */
-    public final function unsetMore(...$items): static
-    {
-        foreach ($items as $item)
-            $this->offsetUnset($item);
-        return $this;
-    }
+    public function unsetMore(...$items): static;
 
     /**
      * Assigns multiple items from multiple lists.
@@ -72,14 +90,7 @@ abstract class Set implements BaseSet
      *            Lists of items to assign.
      * @return static This set.
      */
-    public final function setFromList(iterable ...$lists): static
-    {
-        foreach ($lists as $items) {
-            foreach ($items as $item)
-                $this->offsetSet($item, true);
-        }
-        return $this;
-    }
+    public function setFromList(iterable ...$lists): static;
 
     /**
      * Drops multiples items from multiple lists.
@@ -88,12 +99,5 @@ abstract class Set implements BaseSet
      *            Lists of items to drop.
      * @return static This set.
      */
-    public final function unsetFromList(iterable ...$lists): static
-    {
-        foreach ($lists as $items) {
-            foreach ($items as $item)
-                $this->offsetUnset($item);
-        }
-        return $this;
-    }
+    public function unsetFromList(iterable ...$lists): static;
 }

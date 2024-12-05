@@ -7,23 +7,21 @@ namespace Time2Split\Help\_private\Set;
 use Time2Split\Help\Set;
 
 /**
- *
  * @internal
+ * 
  * @template D
  * @template T
- * @extends Set<T>
+ * @extends BaseSet<T>
  * @implements \IteratorAggregate<T>
  * @author Olivier Rodriguez (zuri)
  */
-abstract class SetDecorator extends Set implements \IteratorAggregate
+abstract class SetDecorator extends BaseSet implements \IteratorAggregate
 {
 
     /**
      * @param Set<D> $decorate
      */
-    public function __construct(protected readonly Set $decorate)
-    {
-    }
+    public function __construct(protected readonly Set $decorate) {}
 
     public function offsetGet($offset): bool
     {

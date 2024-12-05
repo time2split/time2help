@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Time2Split\Help;
 
+use Time2Split\Help\_private\Set\BaseSet;
 use Time2Split\Help\Classes\NotInstanciable;
 use Time2Split\Help\Exception\UnmodifiableSetException;
 use Time2Split\Help\_private\Set\SetDecorator;
@@ -175,7 +176,7 @@ final class Sets
      */
     public static function null(): Set
     {
-        return self::$null ??= new class() extends Set implements \IteratorAggregate
+        return self::$null ??= new class() extends BaseSet implements \IteratorAggregate
         {
             private readonly \Iterator $iterator;
 
