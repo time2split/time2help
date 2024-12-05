@@ -1,9 +1,12 @@
 <?php
-declare(strict_types = 1);
+
+declare(strict_types=1);
+
 namespace Time2Split\Help\Tests;
 
 use PHPUnit\Framework\TestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Test;
 use Time2Split\Help\Set;
 use Time2Split\Help\Sets;
 use Time2Split\Help\Exception\UnmodifiableSetException;
@@ -99,15 +102,38 @@ final class SetTest extends TestCase
     }
 
     // ========================================================================
+
+    public static function enumProvider(): iterable
+    {
+        return [
+            [Sets::ofEnum(AUnitEnum::class)],
+            [Sets::ofEnum(AUnitEnum::a)],
+        ];
+    }
+
+    #[Test]
+    #[DataProvider('enumProvider')]
+    public function enum(Set $set)
+    {
+        $this->assertFalse($set[AUnitEnum::a]);
+        $set[AUnitEnum::a] = true;
+        $this->assertTrue($set[AUnitEnum::a]);
+        $this->assertSame([
+            AUnitEnum::a
+        ], \iterator_to_array($set));
+        $set[AUnitEnum::a] = false;
+        $this->assertFalse($set[AUnitEnum::a]);
+    }
+
+    // ========================================================================
+
     public static function _testBackedEnum(): iterable
     {
         return [
-            [
-                Sets::ofBackedEnum(AnEnum::class)
-            ],
-            [
-                Sets::ofBackedEnum(AnEnum::a)
-            ]
+            [Sets::ofBackedEnum(AnEnum::class)],
+            [Sets::ofBackedEnum(AnEnum::a)],
+            [Sets::ofEnum(AnEnum::class)],
+            [Sets::ofEnum(AnEnum::a)],
         ];
     }
 
@@ -147,6 +173,12 @@ final class SetTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $test($set);
     }
+}
+
+enum AUnitEnum
+{
+
+    case a;
 }
 
 enum AnEnum: int
