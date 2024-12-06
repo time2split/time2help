@@ -6,6 +6,7 @@ namespace Time2Split\Help;
 
 use Time2Split\Help\Classes\NotInstanciable;
 use Traversable;
+use Time2Split\Help\Iterable\ParallelFlag;
 
 /**
  * Functions on iterables.
@@ -230,6 +231,77 @@ final class Iterables
             return Arrays::reverseFlip($sequence);
 
         return self::flip(self::reverse($sequence));
+    }
+
+
+    /**
+     * Iterate in parallel through multiple iterables.
+     * 
+     * Example
+     * ```php
+     * $a = [10,20,30];
+     * $b = ['a' => 'A', 'b' => 'B', 'c' => 'C'];
+     * $it = Iterables::parallel($a,$b);
+     * print_r(\iterator_to_array($it));
+     * ```
+     * Displays
+     * ```txt
+     * Array
+     * (
+     *     [0] => 10
+     *     [a] => A
+     *     [1] => 20
+     *     [b] => B
+     *     [2] => 30
+     *     [c] => C
+     * )
+     * ```
+     * 
+     * @template K
+     * @template V
+     * @param iterable<K,V>[] $iterables Some iterables.
+     * @param ParallelFlag $flags The flags to set.
+     * @return \Iterator<K,V> A parallel iterator.
+     */
+    public static function parallelWithFlags(
+        iterable $iterables,
+        ParallelFlag $flags = ParallelFlag::NEED_ANY,
+    ): \Iterator {
+        $iterator = new \MultipleIterator(
+            match ($flags) {
+                ParallelFlag::NEED_ANY => \MultipleIterator::MIT_NEED_ANY,
+                ParallelFlag::NEED_ALL => \MultipleIterator::MIT_NEED_ALL,
+            }
+        );
+        foreach ($iterables as $it)
+            $iterator->attachIterator(self::toIterator($it));
+        /**
+         * @var K[] $k
+         * @var V[] $v
+         */
+        foreach ($iterator as $k => $v) {
+            $k = new \ArrayIterator($k);
+            $v = new \ArrayIterator($v);
+
+            while ($k->valid()) {
+                yield $k->current() => $v->current();
+                $k->next();
+                $v->next();
+            }
+        }
+    }
+
+    /**
+     * Iterate in parallel through multiple iterables.
+     * 
+     * @template K
+     * @template V
+     * @param iterable<K,V>[] $iterables Some iterables.
+     * @return \Iterator<K,V> ```self::parallelWithFlags($iterables)```
+     */
+    public static function parallel(iterable ...$iterables): \Iterator
+    {
+        return self::parallelWithFlags($iterables);
     }
 
     // ========================================================================

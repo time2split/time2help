@@ -9,6 +9,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use Time2Split\Help\Arrays;
+use Time2Split\Help\Iterable\ParallelFlag;
 use Time2Split\Help\Iterables;
 use Time2Split\Help\Tests\DataProvider\Provided;
 
@@ -400,6 +401,44 @@ final class IterablesTest extends TestCase
     }
 
     // ========================================================================
+
+    public static function parallelProvider(): iterable
+    {
+        $a = [10 => 'a', 11  => 'b', 12 => 'c'];
+        $b = ['A', 'B', 'C'];
+        $c = ['A', 'B'];
+        $acall = [
+            10 => 'a',
+            0 => 'A',
+            11  => 'b',
+            1 => 'B',
+        ];
+        $ab = $acall + [12 => 'c', 2 => 'C'];
+        $acany = $acall + [12 => 'c', '' => null];
+        $data = [
+            ['ab:all', [ParallelFlag::NEED_ALL, [$a, $b], $ab]],
+            ['ab:any', [ParallelFlag::NEED_ANY, [$a, $b], $ab]],
+            ['ac:all', [ParallelFlag::NEED_ALL, [$a, $c], $acall]],
+            ['ac:any', [ParallelFlag::NEED_ANY, [$a, $c], $acany]],
+        ];
+        $titerables = [];
+
+        foreach ($data as [$head, $data])
+            $titerables[] = new Provided("$head", $data);
+
+        return Provided::merge($titerables);
+    }
+
+    #[Test]
+    #[DataProvider("parallelProvider")]
+    public function parallel(ParallelFlag $flags, array $iterables, array $expect): void
+    {
+        $parallel = Iterables::parallelWithFlags($iterables, $flags);
+        $this->assertSame($expect, \iterator_to_array($parallel));
+    }
+
+    // ========================================================================
+
 
     private static function range($a, $b, $step = 1): \Closure
     {
