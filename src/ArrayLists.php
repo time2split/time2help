@@ -24,7 +24,7 @@ final class ArrayLists
      *
      * @param  mixed $value A value.
      * @return array<int,mixed> Transforms any array $value to \array_values($value),
-     *  else return [$value].
+     *  else returns [$value].
      */
     public static function ensureList($value): array
     {
@@ -40,7 +40,7 @@ final class ArrayLists
      * An array is considered a list if its keys consist of consecutive numbers from 0 to count($array)-1.
      *
      * @param  mixed[] $array The array being evaluated.
-     * @return bool Returns true if array is a list, false otherwise.
+     * @return bool true if array is a list, false otherwise.
      */
     public static function isList(array $array): bool
     {
@@ -58,7 +58,7 @@ final class ArrayLists
      */
     public static function isAlmostList(array $array): bool
     {
-        $notInt = \array_filter(\array_keys($array), fn ($k) => !\is_int($k));
+        $notInt = \array_filter(\array_keys($array), fn($k) => !\is_int($k));
         return empty($notInt);
     }
 

@@ -21,9 +21,6 @@ final class ArrayTrees
      * 
      * @param mixed $value A value/node of a tree.
      * @return bool true if value is an array.
-     * 
-     * @see TreeArrays::update()
-     * @see TreeArrays::walkNodes()
      */
     public static function defaultClosure_isNode(mixed $value): bool
     {

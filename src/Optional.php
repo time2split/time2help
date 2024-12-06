@@ -45,11 +45,11 @@ final class Optional
     }
 
     /**
-     * Returns an Optional with the specified present value.
+     * Returns an Optional containing a specified value.
      * 
      * @template V
-     * @param V $value The value to be present.
-     * @return Optional<V> An Optional with the value present.
+     * @param V $value The value to be stored.
+     * @return Optional<V> An Optional containing `$value`.
      */
     public static function of($value): self
     {
@@ -57,12 +57,12 @@ final class Optional
     }
 
     /**
-     * Returns an Optional describing the specified value, if non-null, otherwise returns an empty Optional.
+     * Gets an Optional of a specified value if non-null, otherwise returns an empty Optional.
      * 
      * @template V
      * @param V $value The possibly-null value to describe.
      * @param mixed $null The value to be considered as null.
-     * @return Optional<V> An Optional with a present value if the specified value is non-null, otherwise an empty Optional.
+     * @return Optional<V> An Optional containing `$value` if `$value !== $null`, otherwise {@see Optional::empty()}.
      */
     public static function ofNullable($value, $null = null): self
     {
@@ -80,9 +80,9 @@ final class Optional
     private static Optional $empty;
 
     /**
-     * Returns an empty Optional singleton instance. No value is present for this Optional.
+     * Returns an empty Optional singleton instance (ie. no value is stored).
      * 
-     * The value is a singleton and may be compared with the === operator.
+     * The value is a singleton and may be compared with the `===` operator.
      * 
      * @return Optional<void> An empty Optional.
      */
@@ -94,7 +94,9 @@ final class Optional
     // ========================================================================
 
     /**
-     * Returns true if there is a value present, otherwise false.
+     * Whether a value is stored in this Optional.
+     * 
+     * @return bool true if there is a stored value, otherwise false.
      */
     public final function isPresent(): bool
     {
@@ -102,7 +104,18 @@ final class Optional
     }
 
     /**
-     * If a value is present in this Optional, returns the value, otherwise throws \Error.
+     * Whether this Optional stores no value.
+     * 
+     * @return bool true if there is no stored value, otherwise false.
+     */
+    public final function isEmpty(): bool
+    {
+        return !$this->isPresent;
+    }
+
+    /**
+     * Retrieves the value of this Optional, or throws an error if no value is stored.
+     * 
      * @return T The value of the optional.
      * @throws \Error
      */
@@ -115,10 +128,12 @@ final class Optional
     }
 
     /**
-     * Returns the value if present, otherwise return $other.
+     * Returns the value if present, otherwise another specified one.
      * 
-     * @param mixed $other The value to be returned if there is no value present, may be null.
-     * @return mixed The value, if present, otherwise $other.
+     * @param mixed $other The value to be returned if this Optional is empty.
+     * It may be null.
+     * 
+     * @return mixed The value if present, otherwise `$other`.
      */
     public final function orElse($other)
     {
@@ -129,10 +144,14 @@ final class Optional
     }
 
     /**
-     * Returns the value if present, otherwise invoke other and return the result of that invocation.
+     * Returns the value if present, otherwise the result of a closure.
      * 
-     * @param \Closure $supplier A Supplier whose result is returned if no value is present.
-     * @return T|mixed The value if present otherwise the result of $other().
+     * @param \Closure $supplier
+     * - `$supplier():mixed`
+     * 
+     * Compute a value to be returned if this Optional is empty.
+     * 
+     * @return T|mixed The value if present, otherwise the result of `$supplier()`.
      */
     public final function orElseGet(\Closure $supplier)
     {

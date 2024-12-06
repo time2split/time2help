@@ -15,21 +15,15 @@ final class IterableTrees
 {
     use NotInstanciable;
 
-    private static function closureVoid(): void
-    {
-    }
+    private static function closureVoid(): void {}
 
     /**
-     * Default implementation for the $hasKey closure parameters to traverse
+     * Default implementation for the `$hasKey` closure parameters to traverse
      * an array tree.
      * 
      * @param mixed $node A node.
      * @param mixed $key A possible key of $tree.
-     * @return bool true if $tree is an array and $tree[$key] exists.
-     * 
-     * @see Trees::setBranch()
-     * @see Trees::follow()
-     * @see Trees::followNodes()
+     * @return bool true if $tree is an array and `$tree[$key]` exists, false otherwise.
      */
     public static function defaultClosure_hasKey(mixed $node, mixed $key): bool
     {
@@ -37,21 +31,12 @@ final class IterableTrees
     }
 
     /**
-     * Default implementation for the $isNode closure parameters to traverse
+     * Default implementation for the `$isNode` closure parameters to traverse
      * an array tree.
      * 
      * @param mixed $node A node.
      * @param mixed[] $path The path to the node.
-     * @return bool true if $tree is an array.
-     * 
-     * @see Trees::countLeaves()
-     * @see Trees::countNodes()
-     * @see Trees::getMaxDepth()
-     * @see Trees::branches()
-     * @see Trees::walkBranches()
-     * @see Trees::walkNodes()
-     * @see Trees::removeBranch()
-     * @see Trees::removeLastEdge()
+     * @return bool true if $tree is an array, false otherwise.
      */
     public static function defaultClosure_isNode(mixed $node, array $path): bool
     {
@@ -59,15 +44,13 @@ final class IterableTrees
     }
 
     /**
-     * Default implementation for the $addEdge closure parameters to update
+     * Default implementation for the `$addEdge` closure parameters to update
      * an array tree.
      * 
-     * Add $tree[$key] = [] to make a new node.
+     * Do `$tree[$key] = [];` to make a new node.
      * 
      * @param mixed &$node A reference to a node.
      * @param mixed $key The key if the child edge to add to the node.
-     * 
-     * @see Trees::setBranch()
      */
     public static function defaultClosure_addEdge(mixed &$node, mixed $key): void
     {
@@ -78,16 +61,13 @@ final class IterableTrees
     }
 
     /**
-     * Default implementation for the $dropEdge closure parameters to update
+     * Default implementation for the `$dropEdge` closure parameters to update
      * an array tree.
      * 
-     * Call: unset($node[$key]);
+     * Do `unset($node[$key]);`.
      * 
      * @param mixed &$node A reference to a node.
-     * @param mixed $key A key to add to $tree.
-     * 
-     * @see Trees::removeBranch()
-     * @see Trees::removeLastEdge()
+     * @param mixed $key A key to add to `$tree`.
      */
     public static function defaultClosure_dropEdge(mixed &$node, mixed $key): void
     {
@@ -95,13 +75,13 @@ final class IterableTrees
     }
 
     /**
-     * Default implementation for the $setLeaf closure parameters using to update
+     * Default implementation for the `$setLeaf` closure parameters using to update
      * an array tree.
+     * 
+     * Do `$leaf = $value;`.
      * 
      * @param mixed &$leaf A reference to the leaf to assign.
      * @param mixed $value A value to assign to the leaf.
-     * 
-     * @see Trees::setBranch()
      */
     public static function defaultClosure_setLeaf(mixed &$leaf, mixed $value): void
     {
@@ -121,16 +101,26 @@ final class IterableTrees
      * 
      * @param iterable<K,V> &$tree A tree in which set a branch.
      * @param iterable<int,K> $path A path to traverse in the array.
+     * 
      * @param ?\Closure $hasKey
      *  Whether $key is a traversable key of a node.
-     *  - $hasKey(V $node, K $key):bool
+     *  - `$hasKey(V $node, K $key):bool`
      * This can only be called once at the first unexistant key encoutered.
+     * 
+     * If set to null then {@see IterableTrees::defaultClosure_hasKey()} is used.
+     * 
      * @param ?\Closure $addEdge
      * Add a sub-node.
-     *  - $addEdge(&$node, K $key):void
+     *  - `$addEdge(&$node, K $key):void`
+     * 
+     * If set to null then {@see IterableTrees::defaultClosure_addEdge()} is used.
+     * 
      * @param ?\Closure $setLeaf
      * Assign a value to the leaf.
-     *  - $setLeaf(&$leaf, V $value):void
+     *  - `$setLeaf(&$leaf, V $value):void`
+     * 
+     * If set to null then {@see IterableTrees::defaultClosure_setLeaf()} is used.
+     * 
      * @param V $value The value to assign to the branch.
      */
     public static function setBranch(
@@ -176,7 +166,10 @@ final class IterableTrees
      * @param D $default A default value to return if the branch does not exists.
      * @param ?\Closure $hasKey
      *  Whether $key is a traversable key of a node.
-     *  - $hasKey(V $node, K $key):bool
+     *  - `$hasKey(V $node, K $key):bool`
+     * 
+     * If set to null then {@see IterableTrees::defaultClosure_hasKey()} is used.
+     * 
      * @return V|D A reference to the $item reached by following $path, or $default if not existant.
      */
     public static function &follow(iterable &$tree, iterable $path, $default = null, \Closure $hasKey = null): mixed
@@ -193,6 +186,7 @@ final class IterableTrees
         }
         return $p;
     }
+
     /**
      * Follows a path in a tree.
      * 
@@ -202,8 +196,11 @@ final class IterableTrees
      * @param iterable<K,V> &$tree A reference to a tree.
      * @param iterable<int,K> $path The path to follow.
      * @param ?\Closure $hasKey
-     *  Whether $key is a traversable key of a node.
-     *  - $hasKey(V $node, K $key):bool
+     *  Whether `$key` is a traversable key of a node.
+     *  - `$hasKey(V $node, K $key):bool`
+     * 
+     * If set to null then {@see IterableTrees::defaultClosure_hasKey()} is used.
+     * 
      * @return array<int,V> An array of references to the traversed nodes of the branch,
      *  including the root and the leaf.
      */
@@ -227,11 +224,11 @@ final class IterableTrees
     /**
      * Transforms a path into a branch with a leaf value.
      * 
-     * Given a path [p_1,p_2,...,p_n] the return is [p_1 => [p_2 => [... => [p_n => $leaf]]]].
+     * Given a path `[p_1,p_2,...,p_n]` the return is `[p_1 => [p_2 => [... => [p_n => $leaf]]]]`.
      * 
      * @param array<int,string|int> $path A path.
      * @param mixed $leaf The value of the last entry.
-     * @return mixed[] A recursive list where the last value is $leaf.
+     * @return mixed[] A recursive list where the last value is `$leaf`.
      */
     public static function pathToBranch(array $path, $leaf): array
     {
@@ -257,9 +254,11 @@ final class IterableTrees
      * 
      * @param iterable<K,V> $tree A tree.
      * @param ?\Closure $isNode
-     *  Whether the value following a path is a node that must be traversed (return true),
-     *  or else is a leaf (return false).
-     *  - $isNode(V &$node, array<int,K> $path):bool
+     *  Whether the value following a path is a node that must be traversed (returns `true`), or else is a leaf (returns `false`).
+     *  - `$isNode(V &$node, array<int,K> $path):bool`
+     * 
+     * If set to null then {@see IterableTrees::defaultClosure_isNode()} is used.
+     * 
      * @return int The number of leaves.
      */
     public static function countLeaves(iterable $tree, \Closure $isNode = null): int
@@ -283,9 +282,10 @@ final class IterableTrees
      * 
      * @param iterable<K,V> $tree A tree.
      * @param ?\Closure $isNode
-     *  Whether the value following a path is a node that must be traversed (return true),
-     *  or else is a leaf (return false).
-     *  - $isNode(V &$node, array<int,K> $path):bool
+     *  Whether the value following a path is a node that must be traversed (returns `true`), or else is a leaf (returns `false`).
+     *  - `$isNode(V &$node, array<int,K> $path):bool`
+     * 
+     * If set to null then {@see IterableTrees::defaultClosure_isNode()} is used.
      * @return int The number of nodes.
      */
     public static function countNodes(iterable $tree, \Closure $isNode = null): int
@@ -309,9 +309,10 @@ final class IterableTrees
      * 
      * @param iterable<K,V> $tree A tree.
      * @param ?\Closure $isNode
-     *  Whether the value following a path is a node that must be traversed (return true),
-     *  or else is a leaf (return false).
-     *  - $isNode(V &$node, array<int,K> $path):bool
+     *  Whether the value following a path is a node that must be traversed (returns `true`), or else is a leaf (returns `false`).
+     *  - `$isNode(V &$node, array<int,K> $path):bool`
+     * 
+     * If set to null then {@see IterableTrees::defaultClosure_isNode()} is used.
      * @return int The maximal depth of the tree.
      */
     public static function getMaxDepth(iterable $tree, \Closure $isNode = null): int
@@ -338,9 +339,10 @@ final class IterableTrees
      * 
      * @param iterable<K,V> $tree A tree.
      * @param ?\Closure $isNode
-     *  Whether the value following a path is a node that must be traversed (return true),
-     *  or else is a leaf (return false).
-     *  - $isNode(V &$node, array<int,K> $path):bool
+     *  Whether the value following a path is a node that must be traversed (returns `true`), or else is a leaf (returns `false`).
+     *  - `$isNode(V &$node, array<int,K> $path):bool`
+     * 
+     * If set to null then {@see IterableTrees::defaultClosure_isNode()} is used.
      * @return array<int,array<int,K>> An array of paths.
      */
     public static function branches(iterable $tree, \Closure $isNode = null): array
@@ -364,15 +366,20 @@ final class IterableTrees
      * 
      * @param iterable<K,V> &$tree A reference to a tree to walk through.
      * @param ?\Closure $isNode
-     *  Whether the value following a path is a node that must be traversed (return true),
-     *  or else is a leaf (return false).
-     *  - $isNode(V &$node, array<int,K> $path):bool
+     *  Whether the value following a path is a node that must be traversed (returns `true`), or else is a leaf (returns `false`).
+     *  - `$isNode(V &$node, array<int,K> $path):bool`
+     * 
+     * If set to null then {@see IterableTrees::defaultClosure_isNode()} is used.
      * @param ?\Closure $onNode
      *  Do something with the root or an interal node (not a leaf).
-     *  - $onNode(V &$node, array<int,K> $path):void
+     *  - `$onNode(V &$node, array<int,K> $path):void`
+     * 
+     * If set to null then nothing is done on a node.
      * @param ?\Closure $onLeaf
      *  Do something with a leaf.
-     *  - $onLeaf(V &$leaf, array<int,K> $path):void
+     *  - `$onLeaf(V &$leaf, array<int,K> $path):void`
+     * 
+     * If set to null then nothing is done on a leaf.
      */
     public static function walkBranches(
         iterable &$tree,
@@ -410,7 +417,6 @@ final class IterableTrees
         }
     }
 
-
     /**
      * Walks through all tree nodes (leaves included).
      * 
@@ -419,12 +425,16 @@ final class IterableTrees
      * 
      * @param iterable<K,V> &$tree A reference to a tree to walk through.
      * @param ?\Closure $isNode
-     *  Whether the value following a path is a node that must be traversed (return true),
-     *  or else is a leaf (return false).
-     *  - $isNode(V &$node, array<int,K> $path):bool
+     *  Whether the value following a path is a node that must be traversed (returns `true`), or else is a leaf (returns `false`).
+     *  - `$isNode(V &$node, array<int,K> $path):bool`
+     * 
+     * If set to null then {@see IterableTrees::defaultClosure_isNode()} is used.
+     * 
      * @param ?\Closure $onAnyNode
      *  Do something with a node (root, internals, leaves).
-     *  - $onAnyNode(V &$node, array<int,K> $path):void
+     *  - `$onAnyNode(V &$node, array<int,K> $path):void`
+     * 
+     * If set to null then nothing is done on a node/leaf.
      */
     public static function walkNodes(
         iterable &$tree,
@@ -446,16 +456,20 @@ final class IterableTrees
      * @param iterable<K,V> &$tree A reference to a tree.
      * @param iterable<int,K> $path The path to the branch to remove.
      * @param ?\Closure $isNode
-     *  Whether the value following a path is a node that must be traversed (return true),
-     *  or else is a leaf (return false).
-     *  - $isNode(V &$node, array<int,K> $path):bool
+     *  Whether the value following a path is a node that must be traversed (returns `true`), or else is a leaf (returns `false`).
+     *  - `$isNode(V &$node, array<int,K> $path):bool`
+     * 
+     * If set to null then {@see IterableTrees::defaultClosure_isNode()} is used.
      * @param ?\Closure $dropEdge
      *  Unset an edge from a parent node.
-     *  - $dropEdge(V &$node, array<int,K> $path):void
-     * @return array<int,mixed> A triple [$traversed, $removed, $value] where
-     *  - $traversed is the path to the node from wich the branch was removed
-     *  - $removed is the part of the branch that was removed
-     *  - $value is the leaf value of the removed branch
+     *  - `$dropEdge(V &$node, array<int,K> $path):void`
+     * 
+     * If set to null then {@see IterableTrees::defaultClosure_dropEdge()} is used.
+     * 
+     * @return array<int,mixed> A triple `[$traversed, $removed, $value]` where
+     *  - `$traversed` is the path to the node from wich the branch was removed,
+     *  - `$removed` is the part of the branch that was removed,
+     *  - `$value` is the leaf value of the removed branch.
      */
     public static function removeBranch(
         iterable &$tree,
@@ -490,7 +504,7 @@ final class IterableTrees
     }
 
     /**
-     * Removes an edge and it subtree.
+     * Removes an edge and its subtree.
      * 
      * @template K
      * @template V
@@ -498,12 +512,16 @@ final class IterableTrees
      * @param iterable<K,V> &$tree A reference to a tree.
      * @param iterable<int,K> $path The path to the leaf to remove.
      * @param ?\Closure $isNode
-     *  Whether the value following a path is a node that must be traversed (return true),
-     *  or else is a leaf (return false).
-     *  - $isNode(V &$node, array<int,K> $path):bool
+     *  Whether the value following a path is a node that must be traversed (returns `true`), or else is a leaf (returns `false`).
+     *  - `$isNode(V &$node, array<int,K> $path):bool`
+     * 
+     * If set to null then {@see IterableTrees::defaultClosure_isNode()} is used.
      * @param ?\Closure $dropEdge
      *  Unset an edge from a parent node.
-     *  - $dropEdge(V &$node, array<int,K> $path):void
+     *  - `$dropEdge(V &$node, array<int,K> $path):void`
+     * 
+     * If set to null then {@see IterableTrees::defaultClosure_dropEdge()} is used.
+     * 
      * @return V The removed subtree.
      */
     public static function removeLastEdge(

@@ -22,7 +22,7 @@ final class Arrays
      * @template T
      * 
      * @param T|array<T> $value A value.
-     * @return T[] $value if it is an array, or [ $value ].
+     * @return T[] `$value` if it is an array, `[ $value ]` otherwise.
      */
     public static function ensureArray($value): array
     {
@@ -39,7 +39,7 @@ final class Arrays
      * @template T
      * 
      * @param T|array<T>|\ArrayAccess<K,T> $value A value.
-     * @return T[]|\ArrayAccess<K,T> $value if it is usable as an array, or [ $value ].
+     * @return T[]|\ArrayAccess<K,T> `$value` if it is usable as an array, `[ $value ]` otherwise.
      */
     public static function ensureArrayAccess($value): array|\ArrayAccess
     {
@@ -88,7 +88,7 @@ final class Arrays
     {
         for (end($array); ($k = key($array)) !== null; prev($array))
             // Impossible to be a false error value since $k !== null
-            yield $k =>  current($array);
+            yield $k => current($array);
     }
 
     /**
@@ -118,7 +118,7 @@ final class Arrays
     }
 
     /**
-     * An iterator over an array's entries reversing their key with its value (ie: $val => $key).
+     * An iterator over an array's entries reversing their key with its value (ie: `$val => $key`).
      * 
      * @template V
      * @param V[] $array An array.
@@ -136,6 +136,7 @@ final class Arrays
      * @template V
      * @param V[] $array An array.
      * @return \Iterator<V,string|int> An iterator.
+     * 
      * @see Arrays::flip()
      */
     public static function reverseFlip(array $array): \Iterator
@@ -188,7 +189,7 @@ final class Arrays
      * 
      * @param mixed[] $array An array.
      * @param D $default A default value.
-     * @return string|int|D The first key, or $default if $array is empty.
+     * @return string|int|D The first key, or `$default` if `$array` is empty.
      */
     public static function firstKey(array $array, $default = null): mixed
     {
@@ -206,7 +207,7 @@ final class Arrays
      * 
      * @param V[] $array An array.
      * @param D $default A default value.
-     * @return V|D The first value, or $default if $array is empty.
+     * @return V|D The first value, or `$default` if `$array` is empty.
      */
     public static function firstValue(array $array, $default = null): mixed
     {
@@ -223,7 +224,7 @@ final class Arrays
      * 
      * @param mixed[] $array An array.
      * @param D $default A default value.
-     * @return string|int|D The last key, or $default if $array is empty.
+     * @return string|int|D The last key, or `$default` if `$array` is empty.
      */
     public static function lastKey(array $array, $default = null): mixed
     {
@@ -241,7 +242,7 @@ final class Arrays
      * 
      * @param V[] $array An array.
      * @param D $default A default value.
-     * @return V|D The last value, or $default if $array is empty.
+     * @return V|D The last value, or `$default` if `$array` is empty.
      */
     public static function lastValue(array $array, $default = null): mixed
     {
@@ -259,10 +260,10 @@ final class Arrays
      * @template V
      * @template D
      * @param V[] $array An array.
-     * @param (string|int)[] $keys The keys of $array to select.
+     * @param (string|int)[] $keys The keys from `$array` to select.
      * @param D $default A default value.
-     * @return (D|V)[] The entries of $array ($k => $v) where $k is also a key of $keys,
-     *  or ($k => $default) if $k is not a key of $array.
+     * @return (D|V)[] The entries of `$array` (`$k => $v`) where `$k` is also a key of `$keys`,
+     *  or (`$k => $default`) if `$k` is not a key of `$array`.
      */
     public static function arraySelect(array $array, array $keys, $default = null): array
     {
@@ -279,15 +280,18 @@ final class Arrays
     /**
      * Maps then merges.
      * 
-     * @param \Closure $callback A callable to run for each value in each array.
-     *  - $callback($value):mixed
+     * @param \Closure $callback
+     * A callable to run for each value in each array.
+     *  - `$callback($value):mixed`
+     * 
      * @param mixed[] $array An array to run through the callback function.
      * @param mixed[] ...$arrays
      *  Supplementary variable list of array arguments to run through the callback function.
-     * @return mixed[] \array_merge(...\array_map($callback, $array, ...$arrays))
      * 
-     * @see https://www.php.net/manual/en/function.array-map.php
-     * @see https://www.php.net/manual/en/function.array-merge.php
+     * @return mixed[] `\array_merge(...\array_map($callback, $array, ...$arrays))`
+     * 
+     * @link https://www.php.net/manual/en/function.array-map.php array_map()
+     * @link https://www.php.net/manual/en/function.array-merge.php array_merge()
      */
     public static function arrayMapMerge(\Closure $callback, array $array, array ...$arrays): array
     {
@@ -298,21 +302,22 @@ final class Arrays
      * Maps then deduplicates elements.
      * 
      * @param \Closure $callback A callable to run for each value in each array.
-     *  - $callback($value):mixed
+     *  - `$callback($value):mixed`
+     * 
      * @param mixed[] $array An array to run through the callback function.
      * @param int $flags 
      * The optional second parameter flags may be used to modify the comparison behavior using these values:
      * 
      * Comparison type flags:
-     * - SORT_REGULAR - compare items normally (don't change types)
-     * - SORT_NUMERIC - compare items numerically
-     * - SORT_STRING - compare items as strings
-     * - SORT_LOCALE_STRING - compare items as strings, based on the current locale.
+     * - `SORT_REGULAR` - compare items normally (don't change types)
+     * - `SORT_NUMERIC` - compare items numerically
+     * - `SORT_STRING` - compare items as strings
+     * - `SORT_LOCALE_STRING` - compare items as strings, based on the current locale.
      * 
-     * @return mixed[] \array_unique(\array_map($callback, $array), $flags)
+     * @return mixed[] `\array_unique(\array_map($callback, $array), $flags)`
      * 
-     * @see https://www.php.net/manual/en/function.array-map.php
-     * @see https://www.php.net/manual/en/function.array-unique.php
+     * @link https://www.php.net/manual/en/function.array-map.php array_map()
+     * @link https://www.php.net/manual/en/function.array-unique.php array_unique()
      */
     public static function arrayMapUnique(\Closure $callback, array $array, int $flags = SORT_REGULAR): array
     {
@@ -323,9 +328,9 @@ final class Arrays
      * Applies a callback to the keys of a given array.
      * 
      * @param \Closure $callback A closure to run for each key of the array.
-     *  - $callback($key):string|int
+     *  - `$callback($key):string|int`
      * @param mixed[] $array An array.
-     * @return mixed[] An array where each entry ($k => $v) has been replaced by ($callback($k) => $v).
+     * @return mixed[] An array where each entry (`$k => $v`) has been replaced by (`$callback($k) => $v`).
      */
     public static function arrayMapKey(\Closure $callback, array $array): array
     {
@@ -340,19 +345,19 @@ final class Arrays
      * @param V[] $array An array.
      * @param \Closure $filter A filter to apply on each entry of the array.
      *  If no callback is supplied, all empty entries of array will be removed.
-     *  See empty() for how PHP defines empty in this case.
-     *  - $filter(V $value):bool ($mode=0)
-     *  - $filter(string|int $key):bool ($mode=ARRAY_FILTER_USE_KEY)
-     *  - $filter(V $value, string|int $key):bool ($mode=ARRAY_FILTER_USE_BOTH)
+     *  See `empty()` to know how PHP defines the empty semantic in this case.
+     *  - `$filter(V $value):bool` (`$mode=0`)
+     *  - `$filter(string|int $key):bool` (`$mode=ARRAY_FILTER_USE_KEY`)
+     *  - `$filter(V $value, string|int $key):bool` (`$mode=ARRAY_FILTER_USE_BOTH`)
      * @param int $mode Flag determining what arguments are sent to callback:
-     *  - ARRAY_FILTER_USE_KEY - pass key as the only argument to callback instead of the value
-     *  - ARRAY_FILTER_USE_BOTH - pass both value and key as arguments to callback instead of the value
+     *  - `ARRAY_FILTER_USE_KEY` - pass key as the only argument to callback instead of the value
+     *  - `ARRAY_FILTER_USE_BOTH` - pass both value and key as arguments to callback instead of the value
      *
      * Default is 0 which will pass value as the only argument to callback instead.
-     * @return array<int,V[]> A list of two arrays where $list[0] are the entries validated by the filter
-     *  and $list[1] are the remaining entries not filtered.
+     * @return array<int,V[]> A list of two arrays where `$list[0]` are the entries validated by the filter
+     *  and `$list[1]` are the remaining entries not filtered.
      * 
-     * @link https://www.php.net/manual/fr/function.empty.php
+     * @link https://www.php.net/manual/fr/function.empty.php empty()
      */
     public static function arrayPartition(array $array, ?\Closure $filter, int $mode = 0): array
     {
@@ -375,17 +380,17 @@ final class Arrays
      * @template U
      * 
      * @param V[] &$array A reference to an array to update.
-     * @param iterable<U> $update The ($k => $v) entries to set in the array.
+     * @param iterable<U> $update The (`$k => $v`) entries to set in the array.
      * @param ?\Closure $onExists
-     *  - $onUnexists(string|int $k, U $v, V[] &$array):void
+     *  - `$onExists(string|int $k, U $v, V[] &$array):void`
      * 
      *  Updates an existant entry in array.
-     *  If null then an \Exception is thrown for the first existant key entry met.
+     *  If null then an `\Exception` is thrown for the first existant key entry met.
      * @param ?\Closure $onUnexists
-     *  - $onUnexists(string|int $k, U $v, V[] &$array):void
+     *  - `$onUnexists(string|int $k, U $v, V[] &$array):void`
      * 
      *  Updates a non existant entry in array.
-     *  If null then an \Exception is thrown for the first unexistant key entry met.
+     *  If null then an `\Exception` is thrown for the first unexistant key entry met.
      */
     public static function updateWithClosures(
         array &$array,
@@ -394,9 +399,9 @@ final class Arrays
         ?\Closure $onUnexists = null
     ): void {
         if ($onUnexists === null)
-            $onUnexists = fn ($k, $v, $array) => throw new \Exception("The key '$k' does not exists in the array: " . implode(',', \array_keys($array)));
+            $onUnexists = fn($k, $v, $array) => throw new \Exception("The key '$k' does not exists in the array: " . implode(',', \array_keys($array)));
         if ($onExists === null)
-            $onExists = fn ($k, $v, $array) => throw new \Exception("The key '$k' already exists in the array: " . implode(',', \array_keys($array)));
+            $onExists = fn($k, $v, $array) => throw new \Exception("The key '$k' already exists in the array: " . implode(',', \array_keys($array)));
         foreach ($update as $k => $v) {
 
             if (!\array_key_exists($k, $array))
@@ -415,10 +420,10 @@ final class Arrays
     }
 
     /**
-     * Updates entries in an array and add the unexistant ones.
+     * Updates some existant entries in an array and add the unexistant ones.
      * 
      * @param mixed[] &$array A reference to an array to update.
-     * @param iterable<mixed> $update The ($k => $v) entries to set in the array.
+     * @param iterable<mixed> $update The (`$k => $v`) entries to set in the array.
      */
     public static function update(
         array &$array,
@@ -428,13 +433,13 @@ final class Arrays
     }
 
     /**
-     * Updates some existant entries in an array and returns the entries before their update.
+     * Updates some existant entries in an array and returns the remaining unassigned entries of the updating.
      * 
      * @template V
      * 
      * @param V[] &$array A reference to an array to update.
-     * @param iterable<mixed> $update The ($k => $v) entries to set in the array.
-     * @return V[] The existant entries of $array to update with their values (before the updating).
+     * @param iterable<mixed> $update The (`$k => $v`) entries to update in the array.
+     * @return U[] The (`$k => $v`) entries of `$update` where `$k` is not a key of `$array`.
      */
     public static function updateIfPresent(
         array &$array,
@@ -449,13 +454,13 @@ final class Arrays
     }
 
     /**
-     * Updates the non-existant entries in an array and returns the updated entries.
+     * Add the unexistant entries in an array and returns the remaining unassigned entries of the updating.
      * 
      * @template U
      * 
      * @param mixed[] &$array A reference to an array to update.
-     * @param iterable<U> $update The ($k => $v) entries to set in the array.
-     * @return U[] The updated entries of $array.
+     * @param iterable<U> $update The (`$k => $v`) entries to add in the array.
+     * @return U[] The (`$k => $v`) entries of `$update` where `$k` is a also a key of `$array` before the update.
      */
     public static function updateIfAbsent(
         array &$array,
@@ -481,7 +486,7 @@ final class Arrays
      * @param V[] &$array A reference to an array.
      * @param string|int $key The key of the entry to delete.
      * @param D $default A default value to be returned if the entry is not in the array.
-     * @return V|D The removed entry value, if present, otherwise $default.
+     * @return V|D The removed entry value, if present, otherwise `$default`.
      */
     public static function removeEntry(array &$array, string|int $key, $default = null): mixed
     {
@@ -497,7 +502,7 @@ final class Arrays
      * Deletes some values from an array.
      * 
      * @param mixed[] &$array A reference to an array.
-     * @param bool $strict If the comparison must be strict (===) or not (==).
+     * @param bool $strict If the comparison must be strict (`===`) or not (`==`).
      * @param mixed ...$vals Some values to delete.
      */
     public static function dropValues(array &$array, bool $strict, ...$vals): void
@@ -509,8 +514,9 @@ final class Arrays
                 unset($array[$k]);
         }
     }
+
     /**
-     * Deletes some values from an array using the equality operator (==).
+     * Deletes some values from an array using the equality operator (`==`).
      * 
      * @param mixed[] &$array A reference to an array.
      * @param mixed ...$vals Some values to delete.
@@ -519,13 +525,14 @@ final class Arrays
     {
         self::dropValues($array, false, ...$vals);
     }
+
     /**
-     * Deletes some values from an array using the identity operator (===).
+     * Deletes some values from an array using the identity operator (`===`).
      * 
      * @param mixed[] &$array A reference to an array.
      * @param mixed ...$vals Some values to delete.
      */
-    public static function dropIdenticalValues(array &$array, ...$vals): void
+    public static function dropSameValues(array &$array, ...$vals): void
     {
         self::dropValues($array, true, ...$vals);
     }
@@ -538,33 +545,34 @@ final class Arrays
      * @param V[] $array An array.
      * @param \Closure $filter A filter to apply on each entry of the array.
      *  If no callback is supplied, all empty entries of array will be removed.
-     *  See empty() for how PHP defines empty in this case.
-     *  - $filter(V $value):bool ($mode=0)
-     *  - $filter(string|int $key):bool ($mode=ARRAY_FILTER_USE_KEY)
-     *  - $filter(V $value, string|int $key):bool ($mode=ARRAY_FILTER_USE_BOTH)
+     *  See `empty()` to know how PHP defines the empty semantic in this case.
+     *  - `$filter(V $value):bool` (`$mode=0`)
+     *  - `$filter(string|int $key):bool` (`$mode=ARRAY_FILTER_USE_KEY`)
+     *  - `$filter(V $value, string|int $key):bool` (`$mode=ARRAY_FILTER_USE_BOTH`)
      * @param int $mode Flag determining what arguments are sent to callback:
-     *  - ARRAY_FILTER_USE_KEY - pass key as the only argument to callback instead of the value
-     *  - ARRAY_FILTER_USE_BOTH - pass both value and key as arguments to callback instead of the value
+     *  - `ARRAY_FILTER_USE_KEY` - pass key as the only argument to callback instead of the value
+     *  - `ARRAY_FILTER_USE_BOTH` - pass both value and key as arguments to callback instead of the value
      *
      * Default is 0 which will pass value as the only argument to callback instead.
      * @return V[] An array of the removed entries.
+     * 
+     * @link https://www.php.net/manual/fr/function.empty.php empty()
      */
     public static function removeWithFilter(array &$array, ?\Closure $filter = null, int $mode = 0): array
     {
         $drop = [];
         $ret = [];
 
-
         if ($filter === null) {
-            $filter = fn ($v) => empty($v);
+            $filter = fn($v) => empty($v);
             $mode = 0;
         }
         if ($mode === 0)
-            $fmakeParams = fn ($k, $v) => [$v];
+            $fmakeParams = fn($k, $v) => [$v];
         elseif ($mode === ARRAY_FILTER_USE_KEY)
-            $fmakeParams = fn ($k, $v) => [$k];
+            $fmakeParams = fn($k, $v) => [$k];
         elseif ($mode === ARRAY_FILTER_USE_BOTH)
-            $fmakeParams = fn ($k, $v) => [$v, $k];
+            $fmakeParams = fn($k, $v) => [$v, $k];
         else
             throw new \Exception("Invalid mode $mode");
 

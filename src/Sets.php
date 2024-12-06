@@ -44,8 +44,10 @@ final class Sets
     }
 
     /**
-     * Gets a self::arrayKeys() able to store arbitrary elements
-     * as long as an element can be associated to a unique array key identifier.
+     * Provides a set storing arbitrary items as array keys.
+     * 
+     * Internally it gets a {@see Sets::arrayKeys()} to store the items.
+     * This Set can be used when an element can be associated with a unique array key identifier.
      *
      * This class permits to handle more types of values and not just array keys.
      * It makes a bijection between a valid array key and an element.
@@ -87,13 +89,15 @@ final class Sets
 
     /**
      * A set able to store \UnitEnum instances.
-     * Internally it uses a \SplObjectStorage as storage of the enum values.
+     * 
+     * Internally it uses a `\SplObjectStorage` as storage of the enum values.
      *
      * @template T of \UnitEnum
      * @param string|T $enumClass
      *            The enum class of the elements to store.
      *            It may be a string class name of T or a T instance.
      * @return Set<T> A new Set.
+     * 
      * @link https://www.php.net/manual/en/class.unitenum.php \UnitEnum
      */
     public static function ofEnum($enumClass = \UnitEnum::class): Set
@@ -112,7 +116,8 @@ final class Sets
 
     /**
      * A set able to store \BackedEnum instances.
-     * Internally it uses a self::toArrayKeys Set to assign the backed 
+     * 
+     * Internally it uses a {@see Sets::toArrayKeys()} Set to assign the backed 
      * string|int value of an enum value.
      *
      * @template T of \BackedEnum
@@ -147,6 +152,7 @@ final class Sets
      * Call to a mutable method of the set will throws a {@see Exception\UnmodifiableSetException}.
      *
      * @template T
+     * 
      * @param Set<T> $set
      *            A set to decorate.
      * @return Set<T> The unmodifiable set.
@@ -170,7 +176,7 @@ final class Sets
     /**
      * Gets the null pattern unmodifiable set.
      *
-     * The value is a singleton and may be compared with the === operator.
+     * The value is a singleton and may be compared with the `===` operator.
      * 
      * @return Set<void> The unique null pattern set.
      */
@@ -215,7 +221,7 @@ final class Sets
      * 
      * @param Set<mixed> $a First set.
      * @param Set<mixed> $b Second set.
-     * @return bool true if the set contains the same items, false otherwise.
+     * @return bool true if the two sets contains the same items, false otherwise.
      */
     public static function equals(Set $a, Set $b): bool
     {
@@ -231,12 +237,12 @@ final class Sets
     }
 
     /**
-     * Checks whether the items of a set are inside another set.
+     * Checks whether the items of a set are part of another set.
      * 
      * @param Set<mixed> $searchFor The items to search for.
      * @param Set<mixed> $inside The set to search in.
      * 
-     * @return bool true if all the items of $searchFor are inside the set $inside.
+     * @return bool true if all the items of $searchFor are inside the set `$inside`.
      */
     public static function includedIn(Set $searchFor, Set $inside): bool
     {

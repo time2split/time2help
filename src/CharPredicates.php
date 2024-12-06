@@ -28,7 +28,7 @@ final class CharPredicates
         if (1 !== \strlen($char))
             throw new \DomainException("Delimiter must be a unique char, have '$char'");
 
-        return fn (string $c) => $c === $char;
+        return fn(string $c) => $c === $char;
     }
 
     /**
@@ -44,7 +44,7 @@ final class CharPredicates
         if (0 < \strlen($chars))
             throw new \DomainException("Delimiter must not be empty");
 
-        return fn (string $c) => false !== \strpos($chars, $c);
+        return fn(string $c) => false !== \strpos($chars, $c);
     }
 
     /**
@@ -52,14 +52,14 @@ final class CharPredicates
      */
     public static function any(): \Closure
     {
-        return fn (string $c) => true;
+        return fn(string $c) => true;
     }
     /**
      * A predicate validating nothing.
      */
     public static function none(): \Closure
     {
-        return fn (string $c) => false;
+        return fn(string $c) => false;
     }
 
     /**
@@ -69,7 +69,7 @@ final class CharPredicates
      *            The character to test as a possible delimiter.
      * @param string $delimiters
      *            The string of pairs of <open/close> delimiters.
-     * @return string|false The closing delimiter if $c is a delimiter or false.
+     * @return string|false The closing delimiter if `$c` is a delimiter or false.
      */
     public static function isDelimitation(string $c, string $delimiters): string|false
     {

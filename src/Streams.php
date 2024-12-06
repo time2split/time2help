@@ -36,7 +36,9 @@ final class Streams
      * Checks if a stream is seekable.
      * 
      * @param resource $stream A resource stream.
-     * @param null|array<string,mixed> $meta_data The meta data of the stream obtained from \stream_get_meta_data().
+     * @param null|array<string,mixed> $meta_data
+     *      The meta data of the stream obtained from `\stream_get_meta_data()` if available before the function call.
+     *      Unless `\stream_get_meta_data()` is called inside the function.
      * @return bool true if the \fseek() function may be used on the stream.
      */
     public static function isSeekableStream($stream, array $meta_data = null): bool
@@ -50,8 +52,12 @@ final class Streams
      * Checks if a stream is readable.
      * 
      * @param resource $stream A resource stream.
-     * @param null|array<string,mixed> $meta_data The meta data of the stream obtained from \stream_get_meta_data().
-     * @return bool true if the stream is readable.
+     * @param null|array<string,mixed> $meta_data
+     *      The meta data of the stream obtained from `\stream_get_meta_data()` if available before the function call.
+     *      Unless `\stream_get_meta_data()` is called inside the function.
+     * @return bool true if the stream is readable
+     * 
+     * @link https://www.php.net/manual/en/function.stream-get-meta-data.php stream_get_meta_data()
      */
     public static function isReadableStream($stream, array $meta_data = null): bool
     {
@@ -66,7 +72,7 @@ final class Streams
      * Ensures that a stream is readable.
      * 
      * @param string|resource $stream A stream or a string.
-     * @param bool $rewind true if the returned stream must be rewind.
+     * @param bool $rewind true to ensure that the stream is rewinded after the function call.
      * @throws \Exception If cannot make a readable stream.
      * @return resource The stream if it is a readable stream, or self::stringToStream($stream) if it is a string. 
      */
@@ -101,14 +107,17 @@ final class Streams
      * Skips some characters from a stream according to a predicate.
      * 
      * @param resource $stream A stream.
-     * @param \Closure $predicate A predicate that return true if its input character must be read.
+     * @param \Closure $predicate
+     * - `$predicate(string $char)`
+     * Returns true if `$char` must be skipped.
+     * 
      * @return int The number of read character.
      */
     public static function streamSkipChars($stream, \Closure $predicate): int
     {
         return self::skipChars(
-            fn () => \fgetc($stream),
-            fn () => \fseek($stream, -1, SEEK_CUR),
+            fn() => \fgetc($stream),
+            fn() => \fseek($stream, -1, SEEK_CUR),
             $predicate,
         );
     }
@@ -116,7 +125,9 @@ final class Streams
      * Skips some characters from a stream until a predicate is true.
      * 
      * @param resource $stream A stream.
-     * @param \Closure $predicate A predicate that return true if its input character must not be read.
+     * @param \Closure $predicate
+     * - `$predicate(string $char)`
+     * Returns true if `$char` must end the skipping.
      * @return int The number of read character.
      */
     public static function streamSkipCharsUntil($stream, \Closure $predicate): int
@@ -128,31 +139,38 @@ final class Streams
      * Gets some characters from a stream according to a predicate.
      * 
      * @param resource $stream A stream.
-     * @param \Closure $predicate A predicate that return true if its input character must be read.
+     * @param \Closure $predicate
+     * - `$predicate(string $char)`
+     * Returns true if `$char` must be read.
+     * 
      * @return string A string containing the read characters.
      */
     public static function streamGetChars($stream, \Closure $predicate): string
     {
         return self::getChars(
-            fn () => \fgetc($stream),
-            fn () => \fseek($stream, -1, SEEK_CUR),
+            fn() => \fgetc($stream),
+            fn() => \fseek($stream, -1, SEEK_CUR),
             $predicate,
         );
     }
 
     /**
-     * Gets some characters from a stream until a character or a predicate is true.
+     * Gets some characters from a stream until a predicate is true.
      * 
      * @param resource $stream A stream.
-     * @param \Closure $endDelimiter A predicate closure that return true if its input character must not be read, or a character that must end the reading when encountered in the stream.
+     * 
+     * @param \Closure $predicate
+     * - `$predicate(string $char)`
+     * Returns true if `$char` must end the reading.
+     * 
      * @return string A string containing the read characters.
      */
-    public static function streamGetCharsUntil($stream, \Closure $endDelimiter): string
+    public static function streamGetCharsUntil($stream, \Closure $predicate): string
     {
         return self::getCharsUntil(
-            fn () => \fgetc($stream),
-            fn () => \fseek($stream, -1, SEEK_CUR),
-            $endDelimiter,
+            fn() => \fgetc($stream),
+            fn() => \fseek($stream, -1, SEEK_CUR),
+            $predicate,
         );
     }
 
@@ -177,9 +195,18 @@ final class Streams
     /**
      * Base routine to implement a procedure skipping some chars according to a predicate.
      *
-     * @param \Closure $fgetc ($fgetc()) read a char from a stream.
-     * @param \Closure $fungetc  ($fungetc()) decrement the stream position.
-     * @param \Closure $predicate ($predicate(string $char)) return true if the character must be skipped.
+     * @param \Closure $fgetc
+     * - `$fgetc()`
+     * Reads a char from a stream.
+     * 
+     * @param \Closure $fungetc
+     * - `$fungetc()`
+     * Decrements the stream position.
+     * 
+     * @param \Closure $predicate
+     * - `$predicate(string $char)`
+     * Returns true if `$char` must be skipped.
+     * 
      * @return integer The number of skipped character.
      */
     public static function skipChars(\Closure $fgetc, \Closure $fungetc, \Closure $predicate): int
@@ -198,9 +225,18 @@ final class Streams
     /**
      * Base routine to implement a procedure reading some chars according to a predicate.
      *
-     * @param \Closure $fgetc ($fgetc()) read a char from a stream.
-     * @param \Closure $fungetc  ($fungetc()) decrement the stream position.
-     * @param \Closure $predicate ($predicate(string $char)) return true if the character must be read.
+     * @param \Closure $fgetc
+     * - `$fgetc()`
+     * Reads a char from a stream.
+     * 
+     * @param \Closure $fungetc
+     * - `$fungetc()`
+     * Decrements the stream position.
+     * 
+     * @param \Closure $predicate
+     * - `$predicate(string $char)`
+     * Returns true if `$char` must be read.
+     * 
      * @return string The string of the read characters.
      */
     public static function getChars(\Closure $fgetc, \Closure $fungetc, \Closure $predicate): string
@@ -219,9 +255,18 @@ final class Streams
     /**
      * Base routine to implement a procedure skipping some chars until a predicate is true.
      *
-     * @param \Closure $fgetc ($fgetc()) read a char from a stream.
-     * @param \Closure $fungetc  ($fungetc()) decrement the stream position.
-     * @param \Closure $predicate ($predicate(string $char)) return true if the character stop the reading.
+     * @param \Closure $fgetc
+     * - `$fgetc()`
+     * Reads a char from a stream.
+     * 
+     * @param \Closure $fungetc
+     * - `$fungetc()`
+     * Decrements the stream position.
+     * 
+     * @param \Closure $predicate
+     * - `$predicate(string $char)`
+     * Returns true if `$char` must end the skipping.
+     * 
      * @return integer The number of skipped character.
      */
     public static function skipCharsUntil(\Closure $fgetc, \Closure $fungetc, \Closure $predicate): int
@@ -244,9 +289,18 @@ final class Streams
     /**
      * Base routine to implement a procedure reading some chars until a predicate is true.
      *
-     * @param \Closure $fgetc ($fgetc()) read a char from a stream.
-     * @param \Closure $fungetc  ($fungetc()) decrement the stream position.
-     * @param \Closure $predicate ($predicate(string $char)) return true if the character stop the reading.
+     * @param \Closure $fgetc
+     * - `$fgetc()`
+     * Reads a char from a stream.
+     * 
+     * @param \Closure $fungetc
+     * - `$fungetc()`
+     * Decrements the stream position.
+     * 
+     * @param \Closure $predicate
+     * - `$predicate(string $char)`
+     * Returns true if `$char` must be read.
+     * 
      * @return string The string of the read characters.
      */
     public static function getCharsUntil(\Closure $fgetc, \Closure $fungetc, \Closure $predicate): string

@@ -21,7 +21,7 @@ final class IO
      * 
      * @param string $a First file.
      * @param string $b Second file.
-     * @return bool true if \filemtime($a) < \filemtime($b).
+     * @return bool true if `\filemtime($a) < \filemtime($b)`.
      */
     public static function olderThan(string $a, string $b): bool
     {
@@ -32,7 +32,7 @@ final class IO
      * Removes recursively a directory contents.
      * 
      * @param string $dir A directory.
-     * @param bool $rmRoot If true then removes also the $dir directory.
+     * @param bool $rmRoot If true then removes also the `$dir` directory.
      */
     public static function rrmdir(string $dir, bool $rmRoot = true): void
     {
@@ -96,7 +96,7 @@ final class IO
     }
 
     /**
-     * Pop and chdir the working directory previously pushed with IO::wdPush().
+     * Pop and chdir the working directory previously pushed with `Time2Split\Help\IO::wdPush()`.
      * 
      * @throws \Exception If the stack is empty.
      */
@@ -130,7 +130,7 @@ final class IO
      * begining by a point char (ie: hidden files in a linux filesystem).
      * 
      * @param string $directory A directory to scan.
-     * @param bool $getDirectory If true then the returned paths are prefixed with "$directory/".
+     * @param bool $getDirectory If true then the returned paths are prefixed with `"$directory/"`.
      * @return string[] The files and directories from $directory.
      * @throws \Exception If not able to scan.
      */
@@ -141,11 +141,11 @@ final class IO
         if (false === $list)
             throw new \Exception("Unable to scan the directory '$directory");
 
-        $ret = \array_filter($list, fn ($f) => $f[0] !== '.');
+        $ret = \array_filter($list, fn($f) => $f[0] !== '.');
         \natcasesort($ret);
 
         if ($getDirectory)
-            $ret = \array_map(fn ($v) => "$directory/$v", $ret);
+            $ret = \array_map(fn($v) => "$directory/$v", $ret);
 
         return $ret;
     }
@@ -176,34 +176,38 @@ final class IO
      * stores stdin and stderr into variables 
      * and returns its exit code.
      * 
-     * The $output and $err has two roles in the function.
-     * Firstly, they define the stdout and stderr descriptor spec of the \proc_open() php function.
-     * Each element can be:
+     * The `$output` and `$err` has two roles in the function.
+     * Firstly, they define the stdout and stderr descriptor specification in the same way as in the `\proc_open()` php function (`descriptor_spec` parameter).
+     * 
+     * Each variable can be:
      * - An array describing the pipe to pass to the process.
      * The first element is the descriptor type and the second element is an option for the given type.
-     * Valid types are pipe (the second element is either r to pass the read end of the pipe to the process,
-     * or w to pass the write end) and file (the second element is a filename).
-     * Note that anything else than w is treated like r.
-     * - A stream resource representing a real file descriptor (e.g. opened file, a socket, STDIN).
+     * Valid types are `"pipe"`
+     * (the second element is either `"r"` to pass the read end of the pipe to the process, or `"w"` to pass the write end) and
+     * `"file"` (the second element is a filename).
+     * Note that anything else than `"w"` is treated like `"r"`.
+     * - A stream resource representing a real file descriptor (e.g. opened file, a socket, `STDIN`).
      * 
-     * Secondly, at the end of the function $output is filled with the content of stdout and $err with stderr.
+     * Secondly, at the end of the function `$output` is filled with the content of stdout and `$err` with stderr.
      * 
      * @param string $cmd The command to execute as a process.
      * @param mixed  &$output
-     * - (input) As an input argument it corresponds to the stdout \proc_open() descriptor_spec parameter.
-     * - (return) At the return it is filled with the stdout stream of the process.
+     * - (input) As an input argument it corresponds to the stdout `\proc_open()`'s `$descriptor_spec` parameter.
+     * - (return) After the return it is filled with the stdout stream contents of the process.
      * @param mixed  &$err
-     * - (input) As an input argument it corresponds to the stderr \proc_open() descriptor_spec parameter.
-     * - (return) At the return it is filled with the stderr stream of the process.
+     * - (input) As an input argument it corresponds to the stderr `\proc_open()`'s `descriptor_spec` parameter.
+     * - (return) After the return it is filled with the stderr stream contents of the process.
      * @param ?string $input An input to send to stdin for the process.
+     * 
      * @return int The exit code of the process.
+     * 
      * @throws \Exception If not able to execute the command.
      * 
-     * @see https://www.php.net/manual/fr/function.proc-open.php \proc_open()
+     * @link https://www.php.net/manual/fr/function.proc-open.php proc_open()
      */
     public static function simpleExec(string $cmd, &$output, &$err, ?string $input = null): int
     {
-        $parseDesc = fn ($d) => \in_array($d, [
+        $parseDesc = fn($d) => \in_array($d, [
             STDOUT,
             STDERR
         ]) ? $d : [
@@ -243,19 +247,19 @@ final class IO
     /**
      * Includes a file and retrieves its output from stdout/stderr as a string.
      * 
-     * This function can create variables into the symbol table of the included using a combination of the $variables/$uniqueVar parameters.
+     * This function can create variables into the symbol table of the included using a combination of the `$variables`/`$uniqueVar` parameters.
      * 
      * @param string $file A file to include.
      * @param array<string,mixed> $variables Variables to import into the symbol table
-     *  before the file inclusion (with \extract($variables)).
+     *  before the file inclusion (with `\extract($variables)`).
      * @param string $uniqueVar If not empty then it is a variable name to assign
-     *  to the array $variables before the inclusion ($$uniqueVar = $variables).
-     *  In this case only $$uniqueVar will appears as a variable in the included file.
+     *  to the array `$variables` before the inclusion (`$$uniqueVar = $variables`).
+     *  In this case only `$$uniqueVar` will appears as a variable in the included file.
      * 
-     * @return string|false The contents of stdout/stderr as a string, or false if $file is not a file.
+     * @return string|false The contents of stdout/stderr as a string, or false if `$file` is not a file.
      * 
-     * @see https://www.php.net/manual/en/function.extract.php
-     * @see https://www.php.net/manual/en/function.include.php
+     * @link https://www.php.net/manual/en/function.extract.php extract()
+     * @link https://www.php.net/manual/en/function.include.php include()
      */
     public static function get_include_contents(string $file, array $variables = [], string $uniqueVar = ''): string|false
     {
