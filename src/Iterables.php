@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Time2Split\Help;
 
 use Time2Split\Help\Classes\NotInstanciable;
-use Traversable;
 use Time2Split\Help\Iterable\ParallelFlag;
 
 /**
@@ -19,26 +18,26 @@ final class Iterables
     use NotInstanciable;
 
     /**
-     * Ensures that a value is iterable like a list (ordered int keys), or wraps it inside an array.
+     * Ensures that a value is iterable like a list (ordered int keys), otherwise wraps it inside an array.
      *
      * @param mixed $value A value.
      * @return iterable<int,mixed> Transforms any iterable<V> $value to an iterable<int,V> one,
-     *  else return [$value].
+     *  else returns [$value].
      */
     public static function ensureList($value): iterable
     {
         if (\is_array($value))
             return ArrayLists::ensureList($value);
-        if ($value instanceof Traversable)
-            self::values($value);
+        if ($value instanceof \Traversable)
+            return self::values($value);
         return [$value];
     }
 
     /**
-     * Ensures that a value is iterable, or wraps it inside an array.
+     * Ensures that a value is iterable, otherwise wraps it inside an array.
      *
      * @param mixed $value A value.
-     * @return iterable<mixed> Return the iterable $value, else return [$value].
+     * @return iterable<mixed> The iterable $value, else [$value].
      */
     public static function ensureIterable($value): iterable
     {
@@ -48,12 +47,25 @@ final class Iterables
     }
 
     /**
+     * Ensures that a value is an iterator, otherwise wraps it inside an array iterator.
+     *
+     * @param mixed $value A value.
+     * @return \Iterator<mixed> The \Iterator $value, or new \ArrayIterator([$value]).
+     */
+    public static function ensureIterator($value): \Iterator
+    {
+        if (!\is_iterable($value))
+            $value = [$value];
+        return self::toIterator($value);
+    }
+
+    /**
      * Ensures that an iterable is an \Iterator.
      *
      * @template K
      * @template V
      * @param iterable<K,V> $iterable An iterable.
-     * @return \Iterator<K,V> Return an iterator of the given iterable.
+     * @return \Iterator<K,V> An iterator over the given iterable.
      */
     public static function toIterator(iterable $iterable): \Iterator
     {
@@ -64,7 +76,9 @@ final class Iterables
         if ($iterable instanceof \IteratorAggregate)
             /** @var \Iterator<K,V> */
             return $iterable->getIterator();
-
+        /**
+         * @var \Traversable<K,V> $iterable
+         */
         return new \IteratorIterator($iterable);
     }
 
@@ -76,9 +90,10 @@ final class Iterables
      * @param iterable<K,V> $sequence A sequence of entries.
      * @param bool $iteratorClassIsRewindable
      *      true if the sent $sequence is a rewindable iterable or a \Generator.
-     * @return \Iterator<K,V> Return a rewindable iterator.
+     * @return \Iterator<K,V> A rewindable iterator.
      */
-    public static function ensureRewindableIterator(iterable $sequence, bool $iteratorClassIsRewindable = true): \Iterator
+    // TODO: is this function usefull ?
+    private static function ensureRewindableIterator(iterable $sequence, bool $iteratorClassIsRewindable = true): \Iterator
     {
         if (\is_array($sequence))
             return new \ArrayIterator($sequence);
@@ -136,7 +151,7 @@ final class Iterables
     // ========================================================================
 
     /**
-     * An iterator over an array's keys.
+     * An iterator over an iterable's keys.
      *
      * @template K
      * @template V
@@ -154,7 +169,7 @@ final class Iterables
     }
 
     /**
-     * An iterator over an array's values.
+     * An iterator over an iterable's values.
      *
      * @template K
      * @template V
@@ -280,7 +295,7 @@ final class Iterables
      * 
      * @template K
      * @template V
-     * @param iterable<K,V>[] $iterables Some iterables.
+     * @param array<int,iterable<K,V>> $iterables Some iterables.
      * @param ParallelFlag $flags The flags to set.
      * @return \Iterator<K,V> A parallel iterator.
      */
@@ -317,7 +332,7 @@ final class Iterables
      * 
      * @template K
      * @template V
-     * @param iterable<K,V>[] $iterables Some iterables.
+     * @param array<int,iterable<K,V>> $iterables Some iterables.
      * @return \Iterator<K,V> ```self::parallelWithFlags($iterables)```
      */
     public static function parallel(iterable ...$iterables): \Iterator
@@ -361,7 +376,6 @@ final class Iterables
             return Arrays::firstValue($sequence);
 
         foreach ($sequence as $v)
-
             return $v;
         return $default;
     }
@@ -553,12 +567,12 @@ final class Iterables
      * 
      * @param \Closure $searchRelations
      *  Finds whether an entry ($akey => $aval) of $a has a relation with an entry of $b.
-     *  If there is a relation then the callback must return the keys of $b in relation with $aval,
-     *  else it must return false.
+     *  If there is a relation then the callback must returns the keys of $b in relation with $aval,
+     *  else it must returns false.
      *  - searchRelations(K $akey, V $aval, iterable &$b):array<K>|K
      * @param iterable<K,V> $a The iterable to associate from.
      * @param array<mixed> $b The iterable to associate to.
-     * @return \Iterator<K,string|int> Returns an \Iterator of ($ka => $kb) entries
+     * @return \Iterator<K,string|int> An \Iterator of ($ka => $kb) entries
      *  where $ka is from ($ka => $va) an entry of $a in relation
      *  and $kb is from ($kb => $vb) an entry of $b.
      */
@@ -599,7 +613,7 @@ final class Iterables
      *
      * Each value of $b can at most be tagged once to be a value of $a.
      * For instance if $a=['a', 'a'] and $b=['a']
-     * then the difference return ['a'] because the second 'a' of $a
+     * then the difference returns ['a'] because the second 'a' of $a
      * cannot be compared to the same 'a' as the previous comparison.
      * 
      * @param iterable<mixed> $a An iterable.
@@ -656,12 +670,12 @@ final class Iterables
 
     private static function true(): \Closure
     {
-        return fn () => true;
+        return fn() => true;
     }
 
     private static function equals_mayBeStrict(bool $strict): \Closure
     {
-        return $strict ? fn ($a, $b) => $a === $b : fn ($a, $b) => $a == $b;
+        return $strict ? fn($a, $b) => $a === $b : fn($a, $b) => $a == $b;
     }
 
     // ========================================================================
@@ -823,7 +837,7 @@ final class Iterables
      * 
      * @param \Closure $makeEntry
      *  The closure to make a result entry.
-     *  It must return a R value representing a selected iterable entry ($k => $v).
+     *  It must returns a R value representing a selected iterable entry ($k => $v).
      *  - $makeEntry(K $k, V $v):R
      * @param iterable<K,V> ...$arrays
      *            A sequence of iterable.
@@ -891,7 +905,7 @@ final class Iterables
     public static function cartesianProduct(iterable ...$arrays): \Iterator
     {
         /** @var \Iterator<int,array<int,V[]>> */
-        return Iterables::cartesianProductMakeEntries(fn ($k, $v) => [$k => $v], ...$arrays);
+        return Iterables::cartesianProductMakeEntries(fn($k, $v) => [$k => $v], ...$arrays);
     }
 
     /**
@@ -913,7 +927,7 @@ final class Iterables
     public static function cartesianProductPairs(iterable ...$arrays): \Iterator
     {
         /** @var \Iterator<int,array<int,array<int,mixed>>> */
-        return Iterables::cartesianProductMakeEntries(fn ($k, $v) => [$k, $v], ...$arrays);
+        return Iterables::cartesianProductMakeEntries(fn($k, $v) => [$k, $v], ...$arrays);
     }
 
     /**

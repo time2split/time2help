@@ -8,13 +8,97 @@ use PHPUnit\Framework\Assert;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
-use Time2Split\Help\Arrays;
 use Time2Split\Help\Iterable\ParallelFlag;
 use Time2Split\Help\Iterables;
 use Time2Split\Help\Tests\DataProvider\Provided;
 
 final class IterablesTest extends TestCase
 {
+    #[Test]
+    public function ensureList(): void
+    {
+        foreach ([null, 0, 0.0, "", true] as $value) {
+            $list = Iterables::ensureList($value);
+            $this->assertSame([$value], $list);
+        }
+        $l = [1, 2, 3];
+        $list = Iterables::ensureList($l);
+        $this->assertSame($l, $list);
+
+        // Same object
+        $l = new \ArrayIterator(['a' => 1, 'b' => 2]);
+        $list = Iterables::ensureList($l);
+        $this->assertSame(\array_values($l->getArrayCopy()), \iterator_to_array($list));
+    }
+
+    #[Test]
+    public function ensureIterable(): void
+    {
+        foreach (
+            [null, 0, 0.0, "", true] as $value
+        ) {
+            $it = Iterables::ensureIterable($value);
+            $this->assertSame([$value], $it);
+        }
+        foreach (
+            [
+                ['a' => 0, 'b' => 1, 'c' => 2],
+                new \ArrayIterator(['a', 'b', 'c']),
+            ] as $value
+        ) {
+            $it = Iterables::ensureIterable($value);
+            $this->assertSame($value, $it);
+        }
+    }
+
+    #[Test]
+    public function ensureIterator(): void
+    {
+        foreach (
+            [null, 0, 0.0, "", true] as $value
+        ) {
+            $it = Iterables::ensureIterator($value);
+            $this->assertInstanceOf(\Iterator::class, $it);
+            $this->assertSame([$value], \iterator_to_array($it));
+        }
+        foreach (
+            [
+                ['a' => 0, 'b' => 1, 'c' => 2],
+                new \ArrayIterator(['a', 'b', 'c']),
+                \SplFixedArray::fromArray([0,  1, 2]),
+            ] as $value
+        ) {
+            $it = Iterables::ensureIterator($value);
+            $this->assertInstanceOf(\Iterator::class, $it);
+            $this->assertSame(\iterator_to_array($value), \iterator_to_array($it));
+        }
+    }
+
+    #[Test]
+    public function toIterator(): void
+    {
+        foreach (
+            [null, 0, 0.0, "", true] as $value
+        ) {
+            $it = Iterables::ensureIterator($value);
+            $this->assertInstanceOf(\Iterator::class, $it);
+            $this->assertSame([$value], \iterator_to_array($it));
+        }
+        foreach (
+            [
+                ['a' => 0, 'b' => 1, 'c' => 2],
+                new \ArrayIterator(['a', 'b', 'c']),
+                \SplFixedArray::fromArray([0,  1, 2]),
+            ] as $value
+        ) {
+            $it = Iterables::ensureIterator($value);
+            $this->assertInstanceOf(\Iterator::class, $it);
+            $this->assertSame(\iterator_to_array($value), \iterator_to_array($it));
+        }
+    }
+
+    // ========================================================================
+
     private const testIteratorMethodsArray = [
         'a' => 1,
         'b' => 2,
@@ -26,7 +110,7 @@ final class IterablesTest extends TestCase
         $header = "$method$moreHeader";
         $closure = \Closure::fromCallable("Time2Split\Help\Iterables::$method");
         return new Provided($header, [
-            fn ($a) => $closure($a, ...$args),
+            fn($a) => $closure($a, ...$args),
             $expect
         ]);
     }
@@ -39,19 +123,19 @@ final class IterablesTest extends TestCase
     public static function _testIteratorMethods(): iterable
     {
         $mapk = \strtoupper(...);
-        $mapv = fn (int $v) => $v * 10;
+        $mapv = fn(int $v) => $v * 10;
         $mapped = [
             'A' => 10,
             'B' => 20,
             'C' => 30,
         ];
         $provided = [
-            new Provided("array", [fn ($a) => $a]),
-            new Provided("ArrayIterator", [fn ($a) => new \ArrayIterator($a)]),
+            new Provided("array", [fn($a) => $a]),
+            new Provided("ArrayIterator", [fn($a) => new \ArrayIterator($a)]),
         ];
         $methods = [
             new Provided('same', [
-                fn ($a) => $a,
+                fn($a) => $a,
                 self::testIteratorMethodsArray
             ]),
             self::makeIteratorTestMethod('keys', \array_keys(self::testIteratorMethodsArray)),
@@ -121,7 +205,7 @@ final class IterablesTest extends TestCase
         $expect = \count($array);
         $provide = [
             new Provided('array', [
-                fn () => Iterables::count($array),
+                fn() => Iterables::count($array),
                 $expect
             ]),
             new Provided('Traversable', [
@@ -176,8 +260,8 @@ final class IterablesTest extends TestCase
     public static function _testException(): iterable
     {
         $provide = [
-            new Provided('0>offset', [fn () => Iterables::limit([], offset: -1)]),
-            new Provided('0>length', [fn () => Iterables::limit([], length: -1)]),
+            new Provided('0>offset', [fn() => Iterables::limit([], offset: -1)]),
+            new Provided('0>length', [fn() => Iterables::limit([], length: -1)]),
         ];
         return Provided::merge($provide);
     }
@@ -193,6 +277,7 @@ final class IterablesTest extends TestCase
 
     // ========================================================================
 
+    /*
     public static function isRewritingProvider(): array
     {
         $expect = [
@@ -203,12 +288,12 @@ final class IterablesTest extends TestCase
         return [
             'array' => [
                 true,
-                fn () => new \ArrayIterator($expect),
+                fn() => new \ArrayIterator($expect),
                 $expect
             ],
             'gen' => [
                 false,
-                fn () => (function () use ($expect) {
+                fn() => (function () use ($expect) {
                     foreach ($expect as $k => $v) yield $k => $v;
                 })(),
                 $expect
@@ -231,8 +316,15 @@ final class IterablesTest extends TestCase
             $iterator->rewind();
         }
     }
-    private static function makeSequenceTest(TestSequenceData $a, TestSequenceData $b, TestSequenceType $testType, bool $strictCmp, bool $expect = true): Provided
-    {
+    //*/
+
+    private static function makeSequenceTest(
+        TestSequenceData $a,
+        TestSequenceData $b,
+        TestSequenceType $testType,
+        bool $strictCmp,
+        bool $expect = true
+    ): Provided {
         $e = $expect ? 'true' : 'false';
         $s = $strictCmp ? 'strict ' : '';
         $header = "$a $s$testType->name $b is $e";
@@ -241,19 +333,19 @@ final class IterablesTest extends TestCase
             $test = match ($testType) {
                 TestSequenceType::Equals => Iterables::sequenceEquals(...),
                 TestSequenceType::Prefix => Iterables::sequencePrefixEquals(...),
-                TestSequenceType::StrictPrefix => fn ($a, $b) => Iterables::sequencePrefixEquals($a, $b, strictPrefix: true),
+                TestSequenceType::StrictPrefix => fn($a, $b) => Iterables::sequencePrefixEquals($a, $b, strictPrefix: true),
                 TestSequenceType::ListEquals => Iterables::listEquals(...),
                 TestSequenceType::ListPrefix => Iterables::listPrefixEquals(...),
-                TestSequenceType::ListStrictPrefix => fn ($a, $b) => Iterables::ListPrefixEquals($a, $b, strictPrefix: true),
+                TestSequenceType::ListStrictPrefix => fn($a, $b) => Iterables::ListPrefixEquals($a, $b, strictPrefix: true),
             };
         else
             $test = match ($testType) {
-                TestSequenceType::Equals => fn ($a, $b) => Iterables::sequenceEquals($a, $b, true, true),
-                TestSequenceType::Prefix => fn ($a, $b) => Iterables::sequencePrefixEquals($a, $b, true, true),
-                TestSequenceType::StrictPrefix => fn ($a, $b) => Iterables::sequencePrefixEquals($a, $b, true, true, true),
-                TestSequenceType::ListEquals => fn ($a, $b) => Iterables::ListEquals($a, $b, true),
-                TestSequenceType::ListPrefix => fn ($a, $b) => Iterables::ListPrefixEquals($a, $b, true),
-                TestSequenceType::ListStrictPrefix => fn ($a, $b) => Iterables::ListPrefixEquals($a, $b, true, true),
+                TestSequenceType::Equals => fn($a, $b) => Iterables::sequenceEquals($a, $b, true, true),
+                TestSequenceType::Prefix => fn($a, $b) => Iterables::sequencePrefixEquals($a, $b, true, true),
+                TestSequenceType::StrictPrefix => fn($a, $b) => Iterables::sequencePrefixEquals($a, $b, true, true, true),
+                TestSequenceType::ListEquals => fn($a, $b) => Iterables::ListEquals($a, $b, true),
+                TestSequenceType::ListPrefix => fn($a, $b) => Iterables::ListPrefixEquals($a, $b, true),
+                TestSequenceType::ListStrictPrefix => fn($a, $b) => Iterables::ListPrefixEquals($a, $b, true, true),
             };
 
         return new Provided($header, [
@@ -540,7 +632,7 @@ final class IterablesTest extends TestCase
     public function testCartesianProduct(int $count, \Closure ...$generators): void
     {
         $expected = self::cartesianResult(...$generators);
-        $result = Iterables::cartesianProduct(...\array_map(fn ($g) => \iterator_to_array($g()), $generators));
+        $result = Iterables::cartesianProduct(...\array_map(fn($g) => \iterator_to_array($g()), $generators));
 
         $expected = Iterables::cartesianProductMerger($expected);
         $result = Iterables::cartesianProductMerger($result);
@@ -563,9 +655,7 @@ enum TestSequenceType
 class TestSequenceData
 {
 
-    public function __construct(public string $name, public iterable $sequence)
-    {
-    }
+    public function __construct(public string $name, public iterable $sequence) {}
 
     public function __toString(): string
     {
