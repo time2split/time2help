@@ -112,6 +112,27 @@ final class Iterables
         return $i;
     }
 
+    /**
+     * An Iterator that iterates over several iterators one after the other.
+     * 
+     * @template K
+     * @template V
+     * @param iterable<int,iterable<K,V>> $iterables The iterators to iterate through.
+     * @return \AppendIterator<K,V,\Iterator<K,V>> The iterator.
+     */
+    public static function append(iterable ...$iterables): \AppendIterator
+    {
+        /**
+         * @var \AppendIterator<K,V,\Iterator<K,V>>
+         */
+        $it = new \AppendIterator();
+
+        foreach ($iterables as $i)
+            $it->append(self::toIterator($i));
+
+        return $it;
+    }
+
     // ========================================================================
 
     /**

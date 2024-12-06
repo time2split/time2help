@@ -154,6 +154,25 @@ final class IterablesTest extends TestCase
 
     // ========================================================================
 
+    #[Test]
+    public function append()
+    {
+        $entries = [
+            ['a' => 'A'],
+            ['a' => 'B'],
+            ['b' => 'B'],
+        ];
+        $it = Iterables::append(...$entries);
+
+        $res = [];
+        foreach ($it as $k => $v)
+            $res[] = [$k => $v];
+
+        $this->assertSame($entries, $res);
+    }
+
+    // ========================================================================
+
     public static function _testException(): iterable
     {
         $provide = [
