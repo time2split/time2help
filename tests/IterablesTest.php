@@ -6,6 +6,7 @@ namespace Time2Split\Help\Tests;
 
 use PHPUnit\Framework\Assert;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use Time2Split\Help\Arrays;
 use Time2Split\Help\Iterables;
@@ -360,6 +361,42 @@ final class IterablesTest extends TestCase
     public function testSequence(bool $expected, callable $test, iterable $a, iterable $b): void
     {
         $this->assertEquals($expected, $test($a, $b));
+    }
+
+    // ========================================================================
+
+    public static function limitProvider(): iterable
+    {
+        $a = range(0, 10);
+        $limits = [
+            [0, null],
+            [1, null],
+            [10, null],
+            [0, 1],
+            [0, 10],
+            [0, 100],
+            [1, 1],
+            [2, 5],
+            [0, 0],
+        ];
+        $tlimits = [];
+
+        foreach ($limits as [$offset, $length])
+            $tlimits[] = new Provided("$offset:$length", [$offset, $length, \array_slice($a, $offset, $length, true)]);
+
+        $titerables = [
+            new Provided('array',  [$a]),
+            new Provided('Iterator', [new \ArrayIterator($a)]),
+        ];
+        return Provided::merge($titerables, $tlimits);
+    }
+
+    #[Test]
+    #[DataProvider("limitProvider")]
+    public function limit(iterable $iterable, int $offset, ?int $length, array $expect): void
+    {
+        $limit = Iterables::limit($iterable, $offset, $length);
+        $this->assertSame($expect, \iterator_to_array($limit));
     }
 
     // ========================================================================

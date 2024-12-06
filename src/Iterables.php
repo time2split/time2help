@@ -422,47 +422,9 @@ final class Iterables
         if ($length < 0)
             throw new \DomainException("The offset must be positive, has $length");
         if ($length === 0)
-            return;
+            return new \EmptyIterator();
 
-        $i = 0;
-
-        if ($offset === 0) {
-
-            if (null === $length) {
-
-                foreach ($sequence as $k => $v)
-                    yield $k => $v;
-            } else {
-
-                foreach ($sequence as $k => $v) {
-                    yield $k => $v;
-
-                    if (--$length === 0)
-                        return;
-                }
-            }
-        } elseif (null === $length) {
-
-            foreach ($sequence as $k => $v) {
-
-                if ($i === $offset)
-                    yield $k => $v;
-                else
-                    $i++;
-            }
-        } else {
-
-            foreach ($sequence as $k => $v) {
-
-                if ($i === $offset) {
-                    yield $k => $v;
-
-                    if (--$length === 0)
-                        return;
-                } else
-                    $i++;
-            }
-        }
+        return new \LimitIterator(self::toIterator($sequence), $offset, $length ?? -1);
     }
 
     // ========================================================================
