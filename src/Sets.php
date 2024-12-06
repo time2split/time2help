@@ -206,4 +206,48 @@ final class Sets
             }
         };
     }
+
+    // ========================================================================
+    // OPERATIONS
+
+    /**
+     * Checks if two sets contains the same items.
+     * 
+     * @param Set<mixed> $a First set.
+     * @param Set<mixed> $b Second set.
+     * @return bool true if the set contains the same items, false otherwise.
+     */
+    public static function equals(Set $a, Set $b): bool
+    {
+        if ($a === $b)
+            return true;
+        if (\count($a) !== \count($b))
+            return false;
+        foreach ($a as $item) {
+            if (!$b[$item])
+                return false;
+        }
+        return true;
+    }
+
+    /**
+     * Checks whether the items of a set are inside another set.
+     * 
+     * @param Set<mixed> $searchFor The items to search for.
+     * @param Set<mixed> $inside The set to search in.
+     * 
+     * @return bool true if all the items of $searchFor are inside the set $inside.
+     */
+    public static function includedIn(Set $searchFor, Set $inside): bool
+    {
+        if ($searchFor === $inside)
+            return true;
+        if (\count($searchFor) > \count($inside))
+            return false;
+        foreach ($searchFor as $item) {
+            if (!$inside[$item])
+                return false;
+        }
+        return true;
+    }
 }

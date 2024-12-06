@@ -173,6 +173,46 @@ final class SetTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $test($set);
     }
+
+    // ========================================================================
+
+    #[Test]
+    public function equals()
+    {
+        $a = Sets::arrayKeys()->setMore(0, 1, 2);
+        $b = $a;
+        $this->assertTrue(Sets::equals($a, $b), 'Not the sames');
+
+        // Must be order independant
+        $b = Sets::arrayKeys()->setMore(2, 1, 0);
+        $this->assertTrue(Sets::equals($a, $b), 'Order dependency');
+
+        $b = Sets::arrayKeys()->setMore(0, 1, 3);
+        $this->assertFalse(Sets::equals($a, $b), 'Are equals');
+    }
+
+    #[Test]
+    public function includedIn()
+    {
+        $a = Sets::arrayKeys()->setMore(0, 1, 2);
+        $b = $a;
+        $this->assertTrue(Sets::includedIn($a, $b), 'Not the sames');
+
+        // Must be order independant
+        $b = Sets::arrayKeys()->setMore(2, 1, 0);
+        $this->assertTrue(Sets::includedIn($a, $b), 'Order dependency');
+        $this->assertTrue(Sets::includedIn($b, $a), 'Order dependency');
+
+        $a = Sets::arrayKeys()->setMore(0, 2);
+        $this->assertTrue(Sets::includedIn($a, $b), 'Is not included');
+        $this->assertFalse(Sets::includedIn($b, $a), 'Is included');
+
+        $a = Sets::arrayKeys()->setMore(0, 3);
+        $this->assertFalse(Sets::includedIn($a, $b), 'Is included');
+
+        $a = Sets::arrayKeys()->setMore(0, 1, 3);
+        $this->assertFalse(Sets::includedIn($a, $b), 'Is included');
+    }
 }
 
 enum AUnitEnum
